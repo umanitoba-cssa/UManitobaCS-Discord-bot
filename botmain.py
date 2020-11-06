@@ -1,34 +1,29 @@
 import os
 
 import discord
+from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
-PREFIX = "."
+PREFIX = '.'
 
 
-client = discord.Client()
+#client = discord.Client()
+bot = commands.Bot(command_prefix=PREFIX)
 
-@client.event
+
+@bot.event
 async def on_ready():
-    print(f'{client.user} has connected to Discord!')
+    print(f'{bot.user} has connected to Discord!')
     #guild = discord.utils.get(client.guilds, name=GUILD)
 
-
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
-
-    if message.content[0] == PREFIX:
-        msg = message.content[1:]
-        if msg == "form":
-            await message.channel.send("Command received!")
-        elif msg.split()[0] == "colour":
-            await message.channel.send("Command 2 received!")
+#default format for commands, where the function name is the command to type
+@bot.command()
+async def test(ctx, *args):
+    await ctx.send(' '.join(args))
 
 
-client.run(TOKEN)
+bot.run(TOKEN)
 

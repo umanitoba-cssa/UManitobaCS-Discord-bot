@@ -65,6 +65,8 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
 - `.info devclub {message}`
     - set the text to be displayed when `.devclub is run`
 
+- `.`
+
 
 #### Events:
 - `.event prep {title} text:{n} voice:{n} -p`
@@ -84,6 +86,7 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
 
 - `.event invite` 
     - Generates a temporary invite that lasts until 12am the day of creation
+    - If an invite is already generated, share that one again
 
 - `.event greeting {message}`
     - set the message that displays when someone joins with an event invite
