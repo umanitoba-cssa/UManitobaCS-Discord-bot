@@ -3,15 +3,14 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
 
 
 ## Ideas/What I want this bot to do.   
-- Custom welcome messages that change depending on the invite joined with 
 - manage invites 
 - Check forum responses and send out invites automatically  
     - flag invalid responses, non-UM email, already filled out the form, etc 
     - use code from the existing script 
     - a way to manage flagged responses within the discord 
-- auto assign roles to people who joined with certain invites (as in don't give a role to someone who joined for an event) 
-    - assign student/alumni roles, maybe year roles too? 
-    - include a year(s) question in the forum? 
+- auto assign roles to people who joined with certain invites
+    - assign student/alumni roles, 
+    - maybe year roles too, include a year(s) question in the forum? 
 - prep event channels through a command 
 - colours & year roles like we have now 
 - mod commands to mute users? 
@@ -30,47 +29,41 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
 
 - `.setyear {n}` 
     - 0 < n <= 4 
-    - can have multiple, mainly used to allow users to view class specific classes 
+    - Used to gain access to the course channels of the given year
+    - Can have multiple  
 
 #### All users 
 - `.form`
     - respond with the link to the sign-up form
 
 - `.wics`
-    - respond with info about wics (dm?)
+    - respond with info about wics 
 
 - `.cssa`
     - respond with info about cssa 
 
 - `.devclub`
-    - respond with info about devclub
+    - respond with info about devclub  
 
+  The content for the three above commands will need to be added to the bot manually (for formatting reasons)
+ 
 ### Admin Commands:
 
 - `.form greeting {message}`
     - set the message that displays when someone joins through the form
 
+- `.colour add {colour}`
+    - add the given colour for users to use with `.colour`
+    - {colour} must be a role 
+
 - `.colour delete {colour}`
     - remove the given colour 
 
-- `.colour add {colour}`
-    - add the given colour for users to use with `.colour`
 
-- `.info wics {message}`
-    - set the text to be displayed when `.wics is run`
-
-- `.info cssa {message}`
-    - set the text to be displayed when `.cssa is run`
-
-- `.info devclub {message}`
-    - set the text to be displayed when `.devclub is run`
-
-- `.`
-
-
-#### Events:
-- `.event prep {title} text:{n} voice:{n} -p`
-    - title = Name of the event 
+### Event Commands:  
+Can be used by any Exec
+- `.event prep "{title}" text:{n} voice:{n} -p`
+    - title = Name of the event - must have quotes
     - text:n = number of text channels 
     - voice:n = number of voice channels 
     - -p (optional) = set the channels to public on creation 

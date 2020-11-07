@@ -22,6 +22,7 @@ async def on_ready():
 #default format for commands, where the function name is the command to type
 @bot.command()
 async def test(ctx, *args):
+    #send the arguments of the command back to the user
     await ctx.send(' '.join(args))
 
 
