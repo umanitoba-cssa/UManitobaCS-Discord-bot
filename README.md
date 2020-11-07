@@ -13,8 +13,6 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
     - maybe year roles too, include a year(s) question in the forum? 
 - prep event channels through a command 
 - colours & year roles like we have now 
-- mod commands to mute users? 
-- only allow commands from users with the Student or Alumni roles 
 - generate special invite for events through a command (not a temp invite)
     - Gives whoever joins a 'event' role that has limited access. 
     - auto kicks all users who have that role after 12am the day of the event
