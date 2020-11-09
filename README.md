@@ -50,9 +50,10 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
 - `.form greeting {message}`
     - set the message that displays when someone joins through the form
 
-- `.colour add {colour}`
+- `.colour add #{colour} {label}`
     - add the given colour for users to use with `.colour`
-    - {colour} must be a role 
+    - #{colour} must be a hex colour value  
+    - {label} is what people type to change to this colour
 
 - `.colour delete {colour}`
     - remove the given colour 
