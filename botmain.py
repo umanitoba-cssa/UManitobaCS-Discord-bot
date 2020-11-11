@@ -69,7 +69,7 @@ bot = commands.Bot(command_prefix=PREFIX)
 
 @bot.event
 async def on_ready():
-    print('{bot.user} has connected to Discord!')
+    print(f'{bot.user} has connected to Discord!')
     #guild = discord.utils.get(client.guilds, name=GUILD)
 
 #default format for commands, where the function name is the command to type
