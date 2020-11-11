@@ -1,0 +1,14 @@
+# Default roles
+Student
+Alumni
+# Exec roles
+CSSA Execs
+WICS Execs
+.devClub Execs
+# Admin role
+admin
+# Year roles
+First Year
+Second Year
+Third Year
+Fourth Year

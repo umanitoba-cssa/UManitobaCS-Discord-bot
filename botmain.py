@@ -11,21 +11,56 @@ PREFIX = '.'
 
 #lists
 colourRoles = []
+defaultRoles = []
+execRoles = []
+adminRole = ""
+yearRoles = []
 
 #read in data (may change from txt file if issues come up)
 coloursFile = open("colourRoles.txt","r")
 colourRoles = coloursFile.read().split("\n")
 coloursFile.close()
 
-bot = commands.Bot(command_prefix=PREFIX)
+#read in default roles
+roleFile = open("roles.txt","r")
+line = roleFile.readline()
 
+#the roles.txt file must be formatted in the order
+# Default roles
+# Exec roles
+# Admin role
+# Year roles
+if(line[0] is "#"):
+    line = roleFile.readline()
+    while(line[0] is not "#"):
+        defaultRoles.append(line.replace("\n",""))
+        line = roleFile.readline()
+
+if(line[0] is "#"):
+    line = roleFile.readline()
+    while(line[0] is not "#"):
+        execRoles.append(line.replace("\n",""))
+        line = roleFile.readline()
+
+if(line[0] is "#"):
+    line = roleFile.readline()
+    adminRole = line.replace("\n","") 
+    line = roleFile.readline()
+
+if(line[0] is "#"):
+    line = roleFile.readline()
+    while(line and line[0] is not "#"):
+        yearRoles.append(line.replace("\n",""))
+        line = roleFile.readline()
+
+
+#Start bot
+bot = commands.Bot(command_prefix=PREFIX)
 
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     #guild = discord.utils.get(client.guilds, name=GUILD)
-    for x in colourRoles:
-        print(x)
 
 #default format for commands, where the function name is the command to type
 @bot.command()
@@ -90,7 +125,13 @@ async def colour(ctx, *args):
             await ctx.send("Error: Correct format is: `" + PREFIX + "colour delete {{colour}}`")
     
     else:
-        print()
+        #set colour role of user
+
+        if(len(args) == 0 or args[0] is "remove"):
+            #remove colour role 
+            print()
+        elif(checkColours(args[0])):
+            print()
 
 
 bot.run(TOKEN)
