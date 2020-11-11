@@ -53,13 +53,23 @@ if(line[0] is "#"):
         yearRoles.append(line.replace("\n",""))
         line = roleFile.readline()
 
+#permission check function
+def hasPermission(ctx,level):
+    if(level is "admin"):
+        admin = discord.utils.get(ctx.message.guild.roles, name=adminRole)
+        user = ctx.message.author
+        if admin in user.roles:
+            return True 
+        else:
+            return False
+
 
 #Start bot
 bot = commands.Bot(command_prefix=PREFIX)
 
 @bot.event
 async def on_ready():
-    print(f'{bot.user} has connected to Discord!')
+    print('{bot.user} has connected to Discord!')
     #guild = discord.utils.get(client.guilds, name=GUILD)
 
 #default format for commands, where the function name is the command to type
@@ -77,7 +87,7 @@ async def colour(ctx, *args):
                 return False
         return True
     
-    if(args[0] == 'add'):
+    if(args[0] == 'add' and hasPermission(ctx,"admin")):
         # adding colours
         if(len(args) == 3):
             colour = args[1]
@@ -100,7 +110,7 @@ async def colour(ctx, *args):
         else: 
             await ctx.send("Error: Correct format is: `" + PREFIX + "colour add #{{hexColour}} {{label}}`")
 
-    elif(args[0] == 'delete'):
+    elif(args[0] == 'delete' and hasPermission(ctx,"admin")):
         #removing colours 
         if(len(args) == 2):
             role = discord.utils.get(ctx.message.guild.roles, name=args[1].lower())
@@ -124,14 +134,15 @@ async def colour(ctx, *args):
         else:
             await ctx.send("Error: Correct format is: `" + PREFIX + "colour delete {{colour}}`")
     
-    else:
+    elif hasPermission(ctx,"registered"):
         #set colour role of user
-
         if(len(args) == 0 or args[0] is "remove"):
             #remove colour role 
             print()
         elif(checkColours(args[0])):
             print()
+    else:
+        await ctx.send("Error: You do not have permission to use this command.")
 
 
 bot.run(TOKEN)
