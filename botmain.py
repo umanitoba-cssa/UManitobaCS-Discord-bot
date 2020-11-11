@@ -68,15 +68,22 @@ async def colour(ctx, *args):
     elif(args[0] == 'delete'):
         #removing colours 
         if(len(args) == 2):
-            if(checkColours(args[1].lower())):
-                #colour exits, remove it
-                colourRoles.remove(args[1].lower())
-                #rewrite the file
-                coloursFile = open("colourRoles.txt", "w")
-                for i in colourRoles:
-                    coloursFile.write("\n" + i)
-                coloursFile.close()
-                await ctx.send("Colour role `" + args[1].lower() + "` removed.")
+            role = discord.utils.get(ctx.message.guild.roles, name=args[1].lower())
+            if(checkColours(args[1].lower()) and role):
+                try:
+                    await role.delete()
+                    #colour exits, remove it
+                    colourRoles.remove(args[1].lower())
+                    #rewrite the file
+                    coloursFile = open("colourRoles.txt", "w")
+                    for i in colourRoles:
+                        coloursFile.write("\n" + i)
+                    coloursFile.close()
+                    await ctx.send("Colour role `" + args[1].lower() + "` removed.")
+
+                except discord.Forbidden:
+                    await bot.say("Error: Missing Permissions to delete this role.")
+
             else:
                 await ctx.send("Error: Colour role `" + args[1] + "` not found.")
         else:
