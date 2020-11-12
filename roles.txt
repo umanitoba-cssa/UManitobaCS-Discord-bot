@@ -7,8 +7,3 @@ WICS Execs
 .devClub Execs
 # Admin role
 admin
-# Year roles
-First Year
-Second Year
-Third Year
-Fourth Year

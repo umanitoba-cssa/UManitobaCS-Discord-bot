@@ -14,7 +14,6 @@ colourRoles = []
 defaultRoles = []
 execRoles = []
 adminRole = ""
-yearRoles = []
 
 #read in data (may change from txt file if issues come up)
 coloursFile = open("colourRoles.txt","r")
@@ -46,12 +45,6 @@ if(line[0] is "#"):
     line = roleFile.readline()
     adminRole = line.replace("\n","") 
     line = roleFile.readline()
-
-if(line[0] is "#"):
-    line = roleFile.readline()
-    while(line and line[0] is not "#"):
-        yearRoles.append(line.replace("\n",""))
-        line = roleFile.readline()
 
 #permission check function
 def hasPermission(ctx,level):
@@ -189,6 +182,63 @@ async def colour(ctx, *args):
                 await ctx.send("Colour role `" + newRole.name + "` set.")
             else:
                 await ctx.send("Error: Colour role `" + args[0] + "` not found.")
+    else:
+        await ctx.send("Error: You do not have permission to use this command.")
+
+
+@bot.command()
+async def setyear(ctx, *args):
+    user = ctx.message.author
+
+    def checkUserYear(year):
+        if discord.utils.get(ctx.message.guild.roles, name=year) in user.roles:
+            return True
+        else:
+            return False
+
+    if(hasPermission(ctx,"registered")):
+        if(len(args) == 1):
+            year = args[0].lower().capitalize() + " Year"
+
+            if(year in ['First Year', 'Second Year', 'Third Year', 'Fourth Year']):
+                if(checkUserYear(year)):
+                    await ctx.send("Error: You already have the `" + year + "` role.")
+                else:
+                    await user.add_roles(discord.utils.get(ctx.message.guild.roles, name=year))
+                    await ctx.send("`" + year + "` role added.")
+            else:
+                await ctx.send("Error: Year must be first, second, third, or fourth.")
+        else:
+            await ctx.send("Error: correct format is `" + PREFIX + "setyear {{year}}`")
+    else:
+        await ctx.send("Error: You do not have permission to use this command.")
+
+
+@bot.command()
+async def removeyear(ctx, *args):
+    user = ctx.message.author
+
+    if(hasPermission(ctx,"registered")):
+        if(len(args) == 1):
+            year = args[0].lower().capitalize() + " Year"
+
+            role = discord.utils.get(ctx.message.guild.roles, name=year)
+            
+            if role in user.roles:
+                await user.remove_roles(role)
+                await ctx.send("Year role `" + role.name + "` removed.")
+            else:
+                if(args[0] == 'all'):
+                    for year in ['First Year', 'Second Year', 'Third Year', 'Fourth Year']:
+                        role = discord.utils.get(ctx.message.guild.roles, name=year)
+                        if role in user.roles:
+                            await user.remove_roles(role)
+                            await ctx.send("Year role `" + role.name + "` removed.")
+                else:
+                    await ctx.send("Error: Year role for `" + args[0] + "` was not found.")
+
+        else:
+            await ctx.send("Error: correct format is `" + PREFIX + "setyear {{year}}`")
     else:
         await ctx.send("Error: You do not have permission to use this command.")
 

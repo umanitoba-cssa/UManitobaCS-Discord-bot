@@ -25,10 +25,12 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
     - sets the users color, `.colour remove` to remove 
     - setting a colour removes the current set colour first 
 
-- `.setyear {n}` 
-    - 0 < n <= 4 
+- `.setyear {year}` 
+    - year = first,second,third,fourth
     - Used to gain access to the course channels of the given year
     - Can have multiple  
+
+- `.removeyear {year}`
 
 #### All users 
 - `.form`
