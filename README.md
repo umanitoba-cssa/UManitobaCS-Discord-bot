@@ -22,7 +22,7 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
 ### User Commands:
 #### Registered users:
 - `.colour {colour}`
-    - sets the users color, leave colour blank or `.colour remove` to remove 
+    - sets the users color, `.colour remove` to remove 
     - setting a colour removes the current set colour first 
 
 - `.setyear {n}` 

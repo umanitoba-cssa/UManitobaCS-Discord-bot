@@ -55,14 +55,26 @@ if(line[0] is "#"):
 
 #permission check function
 def hasPermission(ctx,level):
+    user = ctx.message.author
     if(level is "admin"):
         admin = discord.utils.get(ctx.message.guild.roles, name=adminRole)
-        user = ctx.message.author
         if admin in user.roles:
             return True 
         else:
             return False
-
+    elif(level is "registered"):
+        roles = []
+        #add every allowed role to 'roles'
+        for role in defaultRoles:
+            #convert the strings into actual role objects
+            roles.append(discord.utils.get(ctx.message.guild.roles, name=role))
+        for role in execRoles:
+            roles.append(discord.utils.get(ctx.message.guild.roles, name=role))
+        roles.append(discord.utils.get(ctx.message.guild.roles, name=adminRole))
+        for role in roles:
+            if role in user.roles:
+                return True 
+        return False
 
 #Start bot
 bot = commands.Bot(command_prefix=PREFIX)
@@ -74,6 +86,7 @@ async def on_ready():
 
 #default format for commands, where the function name is the command to type
 @bot.command()
+@commands.has_role('admin')
 async def test(ctx, *args):
     #send the arguments of the command back to the user
     await ctx.send(' '.join(args))
@@ -81,11 +94,16 @@ async def test(ctx, *args):
 @bot.command()
 async def colour(ctx, *args):
 
+    #check if this colour is NOT in colour roles
     def checkColours(colour):
         for i in colourRoles:
             if(i is colour):
                 return False
         return True
+
+    if(len(args) == 0):
+        await ctx.send("Error: A colour must be specificed.")
+        return
     
     if(args[0] == 'add' and hasPermission(ctx,"admin")):
         # adding colours
@@ -124,7 +142,7 @@ async def colour(ctx, *args):
                     for i in colourRoles:
                         coloursFile.write("\n" + i)
                     coloursFile.close()
-                    await ctx.send("Colour role `" + args[1].lower() + "` removed.")
+                    await ctx.send("Colour role `" + args[1].lower() + "` deleted.")
 
                 except discord.Forbidden:
                     await bot.say("Error: Missing Permissions to delete this role.")
@@ -135,12 +153,42 @@ async def colour(ctx, *args):
             await ctx.send("Error: Correct format is: `" + PREFIX + "colour delete {{colour}}`")
     
     elif hasPermission(ctx,"registered"):
-        #set colour role of user
-        if(len(args) == 0 or args[0] is "remove"):
-            #remove colour role 
-            print()
-        elif(checkColours(args[0])):
-            print()
+        #set or remove colour role of user
+        user = ctx.message.author
+
+        role = discord.Role
+        roleFound = False
+        for i in colourRoles:
+            if discord.utils.get(ctx.message.guild.roles, name=i) in user.roles:
+                role = discord.utils.get(ctx.message.guild.roles, name=i)
+                roleFound = True
+                break
+
+        if(args[0] == 'remove'):
+            #remove colour role, check which one they have then remove it 
+            if(roleFound):
+                await user.remove_roles(role)
+                await ctx.send("Colour role `" + role.name + "` removed.")
+            else:
+                await ctx.send("Error: No colour role to remove.")
+
+        else:
+            #check if the given colour is valid
+            validColour = False
+            for i in colourRoles:
+                if i == args[0]:
+                    validColour = True
+                    break
+
+            if validColour:
+                if(roleFound):
+                    await user.remove_roles(role)
+                
+                newRole = discord.utils.get(ctx.message.guild.roles, name=args[0])
+                await user.add_roles(newRole)
+                await ctx.send("Colour role `" + newRole.name + "` set.")
+            else:
+                await ctx.send("Error: Colour role `" + args[0] + "` not found.")
     else:
         await ctx.send("Error: You do not have permission to use this command.")
 
