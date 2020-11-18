@@ -85,6 +85,91 @@ async def test(ctx, *args):
     await ctx.send(' '.join(args))
 
 @bot.command()
+async def iam(ctx, *args):
+
+    if hasPermission(ctx,"registered"):
+        if(len(args) != 0):
+
+            user = ctx.message.author
+            #check if the user is adding a year role 
+            year = args[0].lower().capitalize() + " Year"
+
+            if(args[0] in colourRoles):
+
+                #check if the user has a colour role already
+                role = discord.Role
+                roleFound = False
+                for i in colourRoles:
+                    if discord.utils.get(ctx.message.guild.roles, name=i) in user.roles:
+                        role = discord.utils.get(ctx.message.guild.roles, name=i)
+                        roleFound = True
+                        break
+
+                if(roleFound):
+                    await user.remove_roles(role)
+                    
+                newRole = discord.utils.get(ctx.message.guild.roles, name=args[0])
+                await user.add_roles(newRole)
+                await ctx.send("Colour role `" + newRole.name + "` set.")
+
+            elif(year in ['First Year', 'Second Year', 'Third Year', 'Fourth Year']):
+                if(len(args) == 2 and args[1] == 'year'):
+                    if(discord.utils.get(ctx.message.guild.roles, name=year) in user.roles):
+                        await ctx.send("Error: You already have the `" + year + "` role.")
+                    else:
+                        await user.add_roles(discord.utils.get(ctx.message.guild.roles, name=year))
+                        await ctx.send("`" + year + "` role added.")
+                else:
+                    await ctx.send("Error: Correct format is `" + PREFIX + "iam " + args[0] + " year`.")
+            else:
+                await ctx.send("Error: Year or colour role `" + args[0] + "` not found.")
+        else:
+            await ctx.send("Error: Year or colour role must be specified")
+    else:
+        await ctx.send("Error: You do not have permission to use this command.")
+
+@bot.command()
+async def iamn(ctx, *args):
+
+    if hasPermission(ctx,"registered"):
+        if(len(args) != 0):
+
+            user = ctx.message.author
+            year = args[0].lower().capitalize() + " Year"
+
+            if(args[0] in colourRoles):
+                #check if the user has a colour role to remove
+                role = discord.Role
+                roleFound = False
+                for i in colourRoles:
+                    if discord.utils.get(ctx.message.guild.roles, name=i) in user.roles:
+                        role = discord.utils.get(ctx.message.guild.roles, name=i)
+                        roleFound = True
+                        break
+                #remove colour role, check which one they have then remove it 
+                if(roleFound):
+                    await user.remove_roles(role)
+                    await ctx.send("Colour role `" + role.name + "` removed.")
+                else:
+                    await ctx.send("Error: No colour role to remove.")
+
+            elif(year in ['First Year', 'Second Year', 'Third Year', 'Fourth Year']):
+                if(len(args) == 2 and args[1] == 'year'):
+                    role = discord.utils.get(ctx.message.guild.roles, name=year)
+                    if role in user.roles:
+                        await user.remove_roles(role)
+                        await ctx.send("Year role `" + role.name + "` removed.")
+                    else:
+                        await ctx.send("Error: You do not have the role `" + role.name + "`.")
+                else:
+                    await ctx.send("Error: Correct format is `" + PREFIX + "iamn " + args[0] + " year`.")
+            else:
+                await ctx.send("Error: Year or colour role `" + args[0] + "` not found.")
+              
+    else:
+        await ctx.send("Error: You do not have permission to use this command.")
+
+@bot.command()
 async def colour(ctx, *args):
 
     #check if this colour is NOT in colour roles
@@ -94,11 +179,11 @@ async def colour(ctx, *args):
                 return False
         return True
 
-    if(len(args) == 0):
-        await ctx.send("Error: A colour must be specificed.")
+    if(not hasPermission(ctx,"admin")):
+        await ctx.send("Error: You do not have permission to use this command.")
         return
     
-    if(args[0] == 'add' and hasPermission(ctx,"admin")):
+    if(args[0] == 'add'):
         # adding colours
         if(len(args) == 3):
             colour = args[1]
@@ -121,7 +206,7 @@ async def colour(ctx, *args):
         else: 
             await ctx.send("Error: Correct format is: `" + PREFIX + "colour add #{{hexColour}} {{label}}`")
 
-    elif(args[0] == 'delete' and hasPermission(ctx,"admin")):
+    elif(args[0] == 'delete'):
         #removing colours 
         if(len(args) == 2):
             role = discord.utils.get(ctx.message.guild.roles, name=args[1].lower())
@@ -144,103 +229,10 @@ async def colour(ctx, *args):
                 await ctx.send("Error: Colour role `" + args[1] + "` not found.")
         else:
             await ctx.send("Error: Correct format is: `" + PREFIX + "colour delete {{colour}}`")
+        
+    else:
+        await ctx.send("Error: Format must be `" + PREFIX + "colour add/delete {{colour}}.")
     
-    elif hasPermission(ctx,"registered"):
-        #set or remove colour role of user
-        user = ctx.message.author
-
-        role = discord.Role
-        roleFound = False
-        for i in colourRoles:
-            if discord.utils.get(ctx.message.guild.roles, name=i) in user.roles:
-                role = discord.utils.get(ctx.message.guild.roles, name=i)
-                roleFound = True
-                break
-
-        if(args[0] == 'remove'):
-            #remove colour role, check which one they have then remove it 
-            if(roleFound):
-                await user.remove_roles(role)
-                await ctx.send("Colour role `" + role.name + "` removed.")
-            else:
-                await ctx.send("Error: No colour role to remove.")
-
-        else:
-            #check if the given colour is valid
-            validColour = False
-            for i in colourRoles:
-                if i == args[0]:
-                    validColour = True
-                    break
-
-            if validColour:
-                if(roleFound):
-                    await user.remove_roles(role)
-                
-                newRole = discord.utils.get(ctx.message.guild.roles, name=args[0])
-                await user.add_roles(newRole)
-                await ctx.send("Colour role `" + newRole.name + "` set.")
-            else:
-                await ctx.send("Error: Colour role `" + args[0] + "` not found.")
-    else:
-        await ctx.send("Error: You do not have permission to use this command.")
-
-
-@bot.command()
-async def setyear(ctx, *args):
-    user = ctx.message.author
-
-    def checkUserYear(year):
-        if discord.utils.get(ctx.message.guild.roles, name=year) in user.roles:
-            return True
-        else:
-            return False
-
-    if(hasPermission(ctx,"registered")):
-        if(len(args) == 1):
-            year = args[0].lower().capitalize() + " Year"
-
-            if(year in ['First Year', 'Second Year', 'Third Year', 'Fourth Year']):
-                if(checkUserYear(year)):
-                    await ctx.send("Error: You already have the `" + year + "` role.")
-                else:
-                    await user.add_roles(discord.utils.get(ctx.message.guild.roles, name=year))
-                    await ctx.send("`" + year + "` role added.")
-            else:
-                await ctx.send("Error: Year must be first, second, third, or fourth.")
-        else:
-            await ctx.send("Error: correct format is `" + PREFIX + "setyear {{year}}`")
-    else:
-        await ctx.send("Error: You do not have permission to use this command.")
-
-
-@bot.command()
-async def removeyear(ctx, *args):
-    user = ctx.message.author
-
-    if(hasPermission(ctx,"registered")):
-        if(len(args) == 1):
-            year = args[0].lower().capitalize() + " Year"
-
-            role = discord.utils.get(ctx.message.guild.roles, name=year)
-            
-            if role in user.roles:
-                await user.remove_roles(role)
-                await ctx.send("Year role `" + role.name + "` removed.")
-            else:
-                if(args[0] == 'all'):
-                    for year in ['First Year', 'Second Year', 'Third Year', 'Fourth Year']:
-                        role = discord.utils.get(ctx.message.guild.roles, name=year)
-                        if role in user.roles:
-                            await user.remove_roles(role)
-                            await ctx.send("Year role `" + role.name + "` removed.")
-                else:
-                    await ctx.send("Error: Year role for `" + args[0] + "` was not found.")
-
-        else:
-            await ctx.send("Error: correct format is `" + PREFIX + "setyear {{year}}`")
-    else:
-        await ctx.send("Error: You do not have permission to use this command.")
 
 
 bot.run(TOKEN)
