@@ -21,16 +21,18 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
 
 ### User Commands:
 #### Registered users:
-- `.colour {colour}`
-    - sets the users color, `.colour remove` to remove 
+
+- `.iam {colour}`
+    - sets the users color, `.iamn colour` to remove 
     - setting a colour removes the current set colour first 
 
-- `.setyear {year}` 
+- `.iam {year}` 
     - year = first,second,third,fourth
     - Used to gain access to the course channels of the given year
     - Can have multiple  
 
-- `.removeyear {year}`
+- `.iamn {year}`
+    - removes year role from user
 
 #### All users 
 - `.form`
