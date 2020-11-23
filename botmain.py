@@ -4,9 +4,16 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
+# Check if we are running on heroku or locally 
+is_heroku = os.environ.get('IS_HEROKU', None)
+if is_heroku:
+    TOKEN = os.environ.get('DISCORD_TOKEN', None)
+    GUILD = os.environ.get('DISCORD_GUILD', None)
+else:
+    load_dotenv()
+    TOKEN = os.getenv('DISCORD_TOKEN')
+    GUILD = os.getenv('DISCORD_GUILD')
+
 PREFIX = '.'
 
 #lists
