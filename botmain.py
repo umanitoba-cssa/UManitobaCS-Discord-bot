@@ -97,6 +97,9 @@ async def on_ready():
     channel = discord.utils.get(guild.channels, name="general")
     await channel.send('Bot has started.')
 
+    for x in colourRoles:
+        print(": " + x)
+
 #default format for commands, where the function name is the command to type
 @bot.command()
 @commands.has_role('admin')
@@ -196,13 +199,6 @@ async def iamn(ctx, *args):
 @bot.command()
 async def colour(ctx, *args):
 
-    #check if this colour is NOT in colour roles
-    def checkColours(colour):
-        for i in colourRoles:
-            if(i is colour):
-                return False
-        return True
-
     if(not hasPermission(ctx,"admin")):
         await ctx.send("Error: You do not have permission to use this command.")
         return
@@ -215,7 +211,7 @@ async def colour(ctx, *args):
         # adding colours
         if(len(args) == 3):
             colour = args[1]
-            if(checkColours(args[2].lower())):
+            if(args[2].lower() not in colourRoles):
                 if(colour[0] == '#' and len(colour) == 7):
                     try:
                         guild = ctx.guild
@@ -225,7 +221,7 @@ async def colour(ctx, *args):
 
                         #add the new colour to our file, then add it to our list
                         coloursFile = open("colourRoles.txt", "a")
-                        coloursFile.write("\n" + roleName)
+                        coloursFile.write(roleName + "\n")
                         coloursFile.close()
                         colourRoles.append(roleName)
                     except:
@@ -241,7 +237,7 @@ async def colour(ctx, *args):
         #removing colours 
         if(len(args) == 2):
             role = discord.utils.get(ctx.message.guild.roles, name=args[1].lower())
-            if(checkColours(args[1].lower()) and role):
+            if(args[1].lower() in colourRoles and role):
                 try:
                     await role.delete()
                     #colour exits, remove it
@@ -249,7 +245,7 @@ async def colour(ctx, *args):
                     #rewrite the file
                     coloursFile = open("colourRoles.txt", "w")
                     for i in colourRoles:
-                        coloursFile.write("\n" + i)
+                        coloursFile.write(i + "\n")
                     coloursFile.close()
                     await ctx.send("Colour role `" + args[1].lower() + "` deleted.")
 
@@ -260,7 +256,6 @@ async def colour(ctx, *args):
                 await ctx.send("Error: Colour role `" + args[1] + "` not found.")
         else:
             await ctx.send("Error: Correct format is: `" + PREFIX + r"colour remove {colour}`")
-        
     else:
         await ctx.send("Error: Correct format is: `" + PREFIX + r"colour add/remove {colour}`.")
     
