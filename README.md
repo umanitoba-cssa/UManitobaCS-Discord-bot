@@ -72,7 +72,7 @@ The content for the three above commands may need to be added to the bot manuall
 - `.colour remove {colour}`
     - remove the given colour 
 
-- *`.autoassign`
+- `.autoassignrole`
     - temporary command for toggling the auto assignment of the student role.
     - will be removed once this is automatically done from the forum responses
 

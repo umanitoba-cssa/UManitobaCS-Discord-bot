@@ -24,6 +24,7 @@ announcementRoles = []
 yearRoles = ['First Year', 'Second Year', 'Third Year', 'Fourth Year']
 
 adminRole = ""
+autoAssign = False
 
 #read in data (should probably change from a txt file)
 coloursFile = open("data/colourRoles.txt","r")
@@ -69,6 +70,16 @@ greetMsgFile = open("data/greetMsg.txt", "r")
 greetMessage = greetMsgFile.read()
 greetMsgFile.close()
 
+#read in autoassign value
+aaFile = open("data/autoAssign.txt","r")
+recievedVal = aaFile.read() 
+#true if it file reads "true", false if anything else
+if recievedVal == "True":
+    autoAssign = True 
+else:
+    autoAssign = False
+aaFile.close()
+
 #permission check function
 def hasPermission(ctx,level):
     user = ctx.message.author
@@ -109,6 +120,11 @@ async def on_member_join(member):
 
     if(greetMessage != ""):
         await channel.send(greetMessage.replace(f"%user%", member.name))
+
+    if(autoAssign):
+        #just student for now, will change later
+        autoRole = discord.utils.get(bot.roles, name="Student")
+        await member.add_roles(autoRole)
 
 
 #### Commands ####
@@ -346,6 +362,28 @@ async def setgreetmessage(ctx, *, arg):
     greetMsgFile = open("data/greetMsg.txt", "w")
     greetMsgFile.write(greetMessage)
     greetMsgFile.close()
+
+@bot.command()
+async def autoassignrole(ctx,*args):
+
+    if(not hasPermission(ctx, "admin")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    if(len(args) != 0):
+        await ctx.send("Error: No parameters are accepted for this command.")
+        return
+
+    autoAssign = not autoAssign
+
+    aaFile = open("data/autoAssign.txt","w")
+    aaFile.write(str(autoAssign))
+    aaFile.close()
+
+    if(autoAssign):
+        await ctx.send("Auto assignment of roles enabled.")
+    elif(not autoAssign):
+        await ctx.send("Auto assignment of roles disabled.")
 
 
 bot.run(TOKEN)
