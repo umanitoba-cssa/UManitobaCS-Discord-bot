@@ -37,11 +37,11 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
 - `.iamn {year}`
     - removes year role from user
 
-- *`.notify {category}`
+- `.notify {category}`
     - gives the user a role specific to an announcement type
     - will be automatic once forum integration is added
 
-- *`.unnotify {category}`
+- `.unnotify {category}`
     - removes an announcement role from a user
 
 #### All users 

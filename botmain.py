@@ -259,7 +259,6 @@ async def colour(ctx, *args):
     else:
         await ctx.send("Error: Correct format is: `" + PREFIX + r"colour add/remove {colour}`.")
     
-#notify / un-notify
 
 @bot.command()
 async def notify(ctx, *args):
@@ -272,8 +271,9 @@ async def notify(ctx, *args):
         await ctx.send("Error: Correct format is: `" + PREFIX + r"notify {category}`.")
         return
 
-    if(args[0].lower in announcementRoles):
-        role = discord.utils.get(ctx.message.guild.roles, name=args[0].lower)
+
+    if(args[0].lower() in announcementRoles):
+        role = discord.utils.get(ctx.message.guild.roles, name=args[0].lower())
         user = ctx.message.author
         if(role):
             if role not in user.roles:
@@ -295,11 +295,11 @@ async def unnotify(ctx, *args):
         return
 
     if(len(args) == 0 or len(args) > 1):
-        await ctx.send("Error: Correct format is: `" + PREFIX + r"unotify {category}`.")
+        await ctx.send("Error: Correct format is: `" + PREFIX + r"unnotify {category}`.")
         return
 
-    if(args[0].lower in announcementRoles):
-        role = discord.utils.get(ctx.message.guild.roles, name=args[0].lower)
+    if(args[0].lower() in announcementRoles):
+        role = discord.utils.get(ctx.message.guild.roles, name=args[0].lower())
         user = ctx.message.author
         if(role):
             if role in user.roles:
