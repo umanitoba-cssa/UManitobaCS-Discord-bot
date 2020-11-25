@@ -61,7 +61,7 @@ The content for the three above commands may need to be added to the bot manuall
  
 ### Admin Commands:
 
-- *`.form greeting {message}`
+- `.setGreetMessage {message}`
     - set the message that displays when someone joins through the form
 
 - `.colour add #{colour} {label}`
@@ -72,7 +72,7 @@ The content for the three above commands may need to be added to the bot manuall
 - `.colour remove {colour}`
     - remove the given colour 
 
-- `.auto assign`
+- *`.autoassign`
     - temporary command for toggling the auto assignment of the student role.
     - will be removed once this is automatically done from the forum responses
 

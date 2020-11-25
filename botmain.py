@@ -26,12 +26,12 @@ yearRoles = ['First Year', 'Second Year', 'Third Year', 'Fourth Year']
 adminRole = ""
 
 #read in data (should probably change from a txt file)
-coloursFile = open("colourRoles.txt","r")
+coloursFile = open("data/colourRoles.txt","r")
 colourRoles = coloursFile.read().split("\n")
 coloursFile.close()
 
 #read in default roles
-roleFile = open("roles.txt","r")
+roleFile = open("data/roles.txt","r")
 line = roleFile.readline()
 
 #the roles.txt file must be formatted in the order
@@ -63,6 +63,11 @@ if(line[0] is "#"):
     line = roleFile.readline()
 
 roleFile.close()
+
+#read in greet message
+greetMsgFile = open("data/greetMsg.txt", "r")
+greetMessage = greetMsgFile.read()
+greetMsgFile.close()
 
 #permission check function
 def hasPermission(ctx,level):
@@ -96,6 +101,17 @@ async def on_ready():
     guild = discord.utils.get(bot.guilds, name=GUILD)
     channel = discord.utils.get(guild.channels, name="general")
     await channel.send('Bot has started.')
+
+@bot.event
+async def on_member_join(member):
+    guild = discord.utils.get(bot.guilds, name=GUILD)
+    channel = discord.utils.get(guild.channels, name="introductions")
+
+    if(greetMessage != ""):
+        await channel.send(greetMessage.replace(f"%user%", member.name))
+
+
+#### Commands ####
 
 #default format for commands, where the function name is the command to type
 @bot.command()
@@ -220,7 +236,7 @@ async def colour(ctx, *args):
                         await ctx.send("Colour role: `" + roleName + "` added.")
 
                         #add the new colour to our file, then add it to our list
-                        coloursFile = open("colourRoles.txt", "a")
+                        coloursFile = open("data/colourRoles.txt", "a")
                         coloursFile.write(roleName + "\n")
                         coloursFile.close()
                         colourRoles.append(roleName)
@@ -243,7 +259,7 @@ async def colour(ctx, *args):
                     #colour exits, remove it
                     colourRoles.remove(args[1].lower())
                     #rewrite the file
-                    coloursFile = open("colourRoles.txt", "w")
+                    coloursFile = open("data/colourRoles.txt", "w")
                     for i in colourRoles:
                         coloursFile.write(i + "\n")
                     coloursFile.close()
@@ -311,6 +327,25 @@ async def unnotify(ctx, *args):
             await ctx.send("Error: Role `" + args[0] + "` not found in discord. This may be a backend issue.")
     else:
         await ctx.send("Error: Role `" + args[0] + "` not found.")
+
+
+@bot.command()
+async def setgreetmessage(ctx, *, arg):
+
+    if(not hasPermission(ctx, "admin")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    if(arg != ""):
+        greetMessage = arg
+        await ctx.send("New greet message set to:\n```" + arg + "```")
+    else:
+        greetMessage = ""
+        await ctx.send("Greet message removed.")
+
+    greetMsgFile = open("data/greetMsg.txt", "w")
+    greetMsgFile.write(greetMessage)
+    greetMsgFile.close()
 
 
 bot.run(TOKEN)
