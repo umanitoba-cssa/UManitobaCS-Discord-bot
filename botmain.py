@@ -97,9 +97,6 @@ async def on_ready():
     channel = discord.utils.get(guild.channels, name="general")
     await channel.send('Bot has started.')
 
-    for x in colourRoles:
-        print(": " + x)
-
 #default format for commands, where the function name is the command to type
 @bot.command()
 @commands.has_role('admin')
@@ -132,8 +129,11 @@ async def iam(ctx, *args):
                     await user.remove_roles(role)
                     
                 newRole = discord.utils.get(ctx.message.guild.roles, name=args[0])
-                await user.add_roles(newRole)
-                await ctx.send("Colour role `" + newRole.name + "` set.")
+                if(newRole):
+                    await user.add_roles(newRole)
+                    await ctx.send("Colour role `" + newRole.name + "` set.")
+                else:
+                    await ctx.send("Error: Role `" + args[0] + "` not found in discord. This may be a backend issue.")
 
             elif(year in yearRoles):
                 if(len(args) == 2 and args[1] == 'year'):
@@ -259,6 +259,58 @@ async def colour(ctx, *args):
     else:
         await ctx.send("Error: Correct format is: `" + PREFIX + r"colour add/remove {colour}`.")
     
+#notify / un-notify
+
+@bot.command()
+async def notify(ctx, *args):
+
+    if(not hasPermission(ctx,"registered")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    if(len(args) == 0 or len(args) > 1):
+        await ctx.send("Error: Correct format is: `" + PREFIX + r"notify {category}`.")
+        return
+
+    if(args[0].lower in announcementRoles):
+        role = discord.utils.get(ctx.message.guild.roles, name=args[0].lower)
+        user = ctx.message.author
+        if(role):
+            if role not in user.roles:
+                await user.add_roles(role)
+                await ctx.send("Announcement role `" + role.name + "` set.")
+            else:
+                await ctx.send("Error: You already have this role.")
+        else:
+            await ctx.send("Error: Role `" + args[0] + "` not found in discord. This may be a backend issue.")
+    else:
+        await ctx.send("Error: Role `" + args[0] + "` not found.")
+
+
+@bot.command()
+async def unnotify(ctx, *args):
+
+    if(not hasPermission(ctx,"registered")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    if(len(args) == 0 or len(args) > 1):
+        await ctx.send("Error: Correct format is: `" + PREFIX + r"unotify {category}`.")
+        return
+
+    if(args[0].lower in announcementRoles):
+        role = discord.utils.get(ctx.message.guild.roles, name=args[0].lower)
+        user = ctx.message.author
+        if(role):
+            if role in user.roles:
+                await user.remove_roles(role)
+                await ctx.send("Announcement role `" + role.name + "` removed.")
+            else:
+                await ctx.send("Error: You do not have this role.")
+        else:
+            await ctx.send("Error: Role `" + args[0] + "` not found in discord. This may be a backend issue.")
+    else:
+        await ctx.send("Error: Role `" + args[0] + "` not found.")
 
 
 bot.run(TOKEN)

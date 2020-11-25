@@ -31,27 +31,37 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
     - Used to gain access to the course channels of the given year
     - Can have multiple  
 
+- `.iamn {colour}`
+    - removes colour role from user
+
 - `.iamn {year}`
     - removes year role from user
 
+- *`.notify {category}`
+    - gives the user a role specific to an announcement type
+    - will be automatic once forum integration is added
+
+- *`.unnotify {category}`
+    - removes an announcement role from a user
+
 #### All users 
-- `.form`
+- *`.form`
     - respond with the link to the sign-up form
 
-- `.wics`
+- *`.wics`
     - respond with info about wics 
 
-- `.cssa`
+- *`.cssa`
     - respond with info about cssa 
 
-- `.devclub`
+- *`.devclub`
     - respond with info about devclub  
 
-  The content for the three above commands will need to be added to the bot manually (for formatting reasons)
+The content for the three above commands may need to be added to the bot manually (for formatting reasons)
  
 ### Admin Commands:
 
-- `.form greeting {message}`
+- *`.form greeting {message}`
     - set the message that displays when someone joins through the form
 
 - `.colour add #{colour} {label}`
@@ -61,6 +71,10 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
 
 - `.colour remove {colour}`
     - remove the given colour 
+
+- `.auto assign`
+    - temporary command for toggling the auto assignment of the student role.
+    - will be removed once this is automatically done from the forum responses
 
 
 ### Event Commands:  
