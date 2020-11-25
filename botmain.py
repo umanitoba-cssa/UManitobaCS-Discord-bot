@@ -53,14 +53,14 @@ if(line[0] is "#"):
 
 if(line[0] is "#"):
     line = roleFile.readline()
-    adminRole = line.replace("\n","") 
-    line = roleFile.readline()
-
-if(line[0] is "#"):
-    line = roleFile.readline()
     while(line[0] is not "#"):
         announcementRoles.append(line.replace("\n",""))
         line = roleFile.readline()
+
+if(line[0] is "#"):
+    line = roleFile.readline()
+    adminRole = line.replace("\n","") 
+    line = roleFile.readline()
 
 roleFile.close()
 
@@ -168,8 +168,11 @@ async def iamn(ctx, *args):
                         break
                 #remove colour role, check which one they have then remove it 
                 if(roleFound):
-                    await user.remove_roles(role)
-                    await ctx.send("Colour role `" + role.name + "` removed.")
+                    if (role.name == args[0]):
+                        await user.remove_roles(role)
+                        await ctx.send("Colour role `" + role.name + "` removed.")
+                    else:
+                        await ctx.send("Error: You do not have the role `" + args[0] + "`.")
                 else:
                     await ctx.send("Error: No colour role to remove.")
 
@@ -185,7 +188,8 @@ async def iamn(ctx, *args):
                     await ctx.send("Error: Correct format is `" + PREFIX + "iamn " + args[0] + " year`.")
             else:
                 await ctx.send("Error: Year or colour role `" + args[0] + "` not found.")
-              
+        else:
+            await ctx.send("Error: Year or colour role must be specified")
     else:
         await ctx.send("Error: You do not have permission to use this command.")
 
@@ -202,31 +206,38 @@ async def colour(ctx, *args):
     if(not hasPermission(ctx,"admin")):
         await ctx.send("Error: You do not have permission to use this command.")
         return
-    
+
+    if(len(args) == 0):
+        await ctx.send("Error: Correct format is: `" + PREFIX + r"colour add/remove {colour}`.")
+        return
+
     if(args[0] == 'add'):
         # adding colours
         if(len(args) == 3):
             colour = args[1]
             if(checkColours(args[2].lower())):
                 if(colour[0] == '#' and len(colour) == 7):
-                    guild = ctx.guild
-                    roleName = args[2].lower()
-                    await guild.create_role(name=roleName,colour=discord.Colour(int(colour[1:], 16)))
-                    await ctx.send("Colour role: `" + roleName + "` added.")
+                    try:
+                        guild = ctx.guild
+                        roleName = args[2].lower()
+                        await guild.create_role(name=roleName,colour=discord.Colour(int(colour[1:], 16)))
+                        await ctx.send("Colour role: `" + roleName + "` added.")
 
-                    #add the new colour to our file, then add it to our list
-                    coloursFile = open("colourRoles.txt", "a")
-                    coloursFile.write("\n" + roleName)
-                    coloursFile.close()
-                    colourRoles.append(roleName)
+                        #add the new colour to our file, then add it to our list
+                        coloursFile = open("colourRoles.txt", "a")
+                        coloursFile.write("\n" + roleName)
+                        coloursFile.close()
+                        colourRoles.append(roleName)
+                    except:
+                        await ctx.send("Error: Invalid hex input: " + colour)
                 else:
                     await ctx.send("Error: Invalid hex input: " + colour)
             else:
                 await ctx.send("Error: Colour role with that name already exists.")
         else: 
-            await ctx.send("Error: Correct format is: `" + PREFIX + "colour add #{{hexColour}} {{label}}`")
+            await ctx.send("Error: Correct format is: `" + PREFIX + r"colour add #{hexColour} {label}`")
 
-    elif(args[0] == 'delete'):
+    elif(args[0] == 'remove'):
         #removing colours 
         if(len(args) == 2):
             role = discord.utils.get(ctx.message.guild.roles, name=args[1].lower())
@@ -248,10 +259,10 @@ async def colour(ctx, *args):
             else:
                 await ctx.send("Error: Colour role `" + args[1] + "` not found.")
         else:
-            await ctx.send("Error: Correct format is: `" + PREFIX + "colour delete {{colour}}`")
+            await ctx.send("Error: Correct format is: `" + PREFIX + r"colour remove {colour}`")
         
     else:
-        await ctx.send("Error: Format must be `" + PREFIX + "colour add/delete {{colour}}.")
+        await ctx.send("Error: Correct format is: `" + PREFIX + r"colour add/remove {colour}`.")
     
 
 

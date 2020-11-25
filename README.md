@@ -59,7 +59,7 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
     - #{colour} must be a hex colour value  
     - {label} is what people type to change to this colour
 
-- `.colour delete {colour}`
+- `.colour remove {colour}`
     - remove the given colour 
 
 
