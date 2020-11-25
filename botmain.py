@@ -20,9 +20,12 @@ PREFIX = '.'
 colourRoles = []
 defaultRoles = []
 execRoles = []
+announcementRoles = []
+yearRoles = ['First Year', 'Second Year', 'Third Year', 'Fourth Year']
+
 adminRole = ""
 
-#read in data (may change from txt file if issues come up)
+#read in data (should probably change from a txt file)
 coloursFile = open("colourRoles.txt","r")
 colourRoles = coloursFile.read().split("\n")
 coloursFile.close()
@@ -35,7 +38,7 @@ line = roleFile.readline()
 # Default roles
 # Exec roles
 # Admin role
-# Year roles
+# Announcement roles
 if(line[0] is "#"):
     line = roleFile.readline()
     while(line[0] is not "#"):
@@ -52,6 +55,14 @@ if(line[0] is "#"):
     line = roleFile.readline()
     adminRole = line.replace("\n","") 
     line = roleFile.readline()
+
+if(line[0] is "#"):
+    line = roleFile.readline()
+    while(line[0] is not "#"):
+        announcementRoles.append(line.replace("\n",""))
+        line = roleFile.readline()
+
+roleFile.close()
 
 #permission check function
 def hasPermission(ctx,level):
@@ -85,7 +96,6 @@ async def on_ready():
     guild = discord.utils.get(bot.guilds, name=GUILD)
     channel = discord.utils.get(guild.channels, name="general")
     await channel.send('Bot has started.')
-
 
 #default format for commands, where the function name is the command to type
 @bot.command()
@@ -122,7 +132,7 @@ async def iam(ctx, *args):
                 await user.add_roles(newRole)
                 await ctx.send("Colour role `" + newRole.name + "` set.")
 
-            elif(year in ['First Year', 'Second Year', 'Third Year', 'Fourth Year']):
+            elif(year in yearRoles):
                 if(len(args) == 2 and args[1] == 'year'):
                     if(discord.utils.get(ctx.message.guild.roles, name=year) in user.roles):
                         await ctx.send("Error: You already have the `" + year + "` role.")
@@ -163,7 +173,7 @@ async def iamn(ctx, *args):
                 else:
                     await ctx.send("Error: No colour role to remove.")
 
-            elif(year in ['First Year', 'Second Year', 'Third Year', 'Fourth Year']):
+            elif(year in yearRoles):
                 if(len(args) == 2 and args[1] == 'year'):
                     role = discord.utils.get(ctx.message.guild.roles, name=year)
                     if role in user.roles:

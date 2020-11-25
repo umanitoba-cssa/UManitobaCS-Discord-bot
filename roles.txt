@@ -7,3 +7,10 @@ WICS Execs
 .devClub Execs
 # Admin role
 admin
+# Announcement Roles
+announcements
+cssa
+wics
+devclub
+game-night
+movie-night
