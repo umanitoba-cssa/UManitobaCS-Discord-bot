@@ -65,6 +65,15 @@ if(line[0] is "#"):
 
 roleFile.close()
 
+lowerRoleList = []
+for x in defaultRoles:
+    lowerRoleList.append(x.lower())
+for x in execRoles:
+    lowerRoleList.append(x.lower())
+for x in announcementRoles:
+    lowerRoleList.append(x.lower())
+lowerRoleList.append(adminRole.lower())
+
 #read in greet message
 greetMsgFile = open("data/greetMsg.txt", "r")
 greetMessage = greetMsgFile.read()
@@ -72,9 +81,9 @@ greetMsgFile.close()
 
 #read in autoassign value
 aaFile = open("data/autoAssign.txt","r")
-recievedVal = aaFile.read() 
+receivedVal = aaFile.read() 
 #true if it file reads "true", false if anything else
-if recievedVal == "True":
+if receivedVal == "True":
     autoAssign = True 
 else:
     autoAssign = False
@@ -104,26 +113,29 @@ def hasPermission(ctx,level):
         return False
 
 #Start bot
-bot = commands.Bot(command_prefix=PREFIX)
+intent = discord.Intents(messages=True, members=True, guilds=True)
+bot = commands.Bot(command_prefix=PREFIX, intents = intent)
 
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
-    guild = discord.utils.get(bot.guilds, name=GUILD)
-    channel = discord.utils.get(guild.channels, name="general")
-    await channel.send('Bot has started.')
+    #guild = discord.utils.get(bot.guilds, name=GUILD)
+    #channel = discord.utils.get(guild.channels, name="general")
 
 @bot.event
 async def on_member_join(member):
+    global greetMessage
+    global autoAssign
+
     guild = discord.utils.get(bot.guilds, name=GUILD)
     channel = discord.utils.get(guild.channels, name="introductions")
 
     if(greetMessage != ""):
-        await channel.send(greetMessage.replace(f"%user%", member.name))
+        await channel.send(greetMessage.replace(f"%user%", member.mention))
 
     if(autoAssign):
         #just student for now, will change later
-        autoRole = discord.utils.get(bot.roles, name="Student")
+        autoRole = discord.utils.get(member.guild.roles, name="Student")
         await member.add_roles(autoRole)
 
 
@@ -182,6 +194,10 @@ async def iam(ctx, *args):
             await ctx.send("Error: Year or colour role must be specified")
     else:
         await ctx.send("Error: You do not have permission to use this command.")
+
+@bot.command()
+async def iamnot(ctx, *args):
+    await iamn(ctx, *args)
 
 @bot.command()
 async def iamn(ctx, *args):
@@ -243,7 +259,7 @@ async def colour(ctx, *args):
         # adding colours
         if(len(args) == 3):
             colour = args[1]
-            if(args[2].lower() not in colourRoles):
+            if(args[2].lower() not in colourRoles and args[2].lower() not in lowerRoleList):
                 if(colour[0] == '#' and len(colour) == 7):
                     try:
                         guild = ctx.guild
@@ -261,7 +277,7 @@ async def colour(ctx, *args):
                 else:
                     await ctx.send("Error: Invalid hex input: " + colour)
             else:
-                await ctx.send("Error: Colour role with that name already exists.")
+                await ctx.send("Error: Role with that name already exists.")
         else: 
             await ctx.send("Error: Correct format is: `" + PREFIX + r"colour add #{hexColour} {label}`")
 
@@ -347,6 +363,7 @@ async def unnotify(ctx, *args):
 
 @bot.command()
 async def setgreetmessage(ctx, *, arg):
+    global greetMessage
 
     if(not hasPermission(ctx, "admin")):
         await ctx.send("Error: You do not have permission to use this command.")
@@ -365,6 +382,7 @@ async def setgreetmessage(ctx, *, arg):
 
 @bot.command()
 async def autoassignrole(ctx,*args):
+    global autoAssign
 
     if(not hasPermission(ctx, "admin")):
         await ctx.send("Error: You do not have permission to use this command.")

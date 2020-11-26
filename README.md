@@ -19,6 +19,8 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
 
 ---
 
+Commands with a '*' have not been implemented yet
+
 ### User Commands:
 #### Registered users:
 
@@ -79,24 +81,24 @@ The content for the three above commands may need to be added to the bot manuall
 
 ### Event Commands:  
 Can be used by any Exec
-- `.event prep "{title}" text:{n} voice:{n} -p`
+- *`.event prep "{title}" text:{n} voice:{n} -p`
     - title = Name of the event - must have quotes
     - text:n = number of text channels 
     - voice:n = number of voice channels 
     - -p (optional) = set the channels to public on creation 
 
-- `.event open` 
+- *`.event open` 
     - sets all event channels to public 
 
-- `.event close`
+- *`.event close`
     - sets all event channels to private
 
-- `.event cleanup`
+- *`.event cleanup`
     - delete invite/channels related to the current event 
 
-- `.event invite` 
+- *`.event invite` 
     - Generates a temporary invite that lasts until 12am the day of creation
     - If an invite is already generated, share that one again
 
-- `.event greeting {message}`
+- *`.event greeting {message}`
     - set the message that displays when someone joins with an event invite
