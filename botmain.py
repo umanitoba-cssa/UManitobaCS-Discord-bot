@@ -79,7 +79,7 @@ greetMessage = greetMsgFile.read()
 greetMsgFile.close()
 
 #read in autoassign value
-aaFile = open("data/autoAssign.txt","r")
+aaFile = open("data/autoassign.txt","r")
 receivedVal = aaFile.read() 
 #true if it file reads "true", false if anything else
 if receivedVal == "True":
@@ -393,7 +393,7 @@ async def autoassignrole(ctx,*args):
 
     autoAssign = not autoAssign
 
-    aaFile = open("data/autoAssign.txt","w")
+    aaFile = open("data/autoassign.txt","w")
     aaFile.write(str(autoAssign))
     aaFile.close()
 
