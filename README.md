@@ -19,6 +19,8 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
 
 ---
 
+Commands with a '*' have not been implemented yet
+
 ### User Commands:
 #### Registered users:
 
@@ -31,27 +33,37 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
     - Used to gain access to the course channels of the given year
     - Can have multiple  
 
+- `.iamn {colour}`
+    - removes colour role from user
+
 - `.iamn {year}`
     - removes year role from user
 
+- `.notify {category}`
+    - gives the user a role specific to an announcement type
+    - will be automatic once forum integration is added
+
+- `.unnotify {category}`
+    - removes an announcement role from a user
+
 #### All users 
-- `.form`
+- *`.form`
     - respond with the link to the sign-up form
 
-- `.wics`
+- *`.wics`
     - respond with info about wics 
 
-- `.cssa`
+- *`.cssa`
     - respond with info about cssa 
 
-- `.devclub`
+- *`.devclub`
     - respond with info about devclub  
 
-  The content for the three above commands will need to be added to the bot manually (for formatting reasons)
+The content for the three above commands may need to be added to the bot manually (for formatting reasons)
  
 ### Admin Commands:
 
-- `.form greeting {message}`
+- `.setGreetMessage {message}`
     - set the message that displays when someone joins through the form
 
 - `.colour add #{colour} {label}`
@@ -59,30 +71,34 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
     - #{colour} must be a hex colour value  
     - {label} is what people type to change to this colour
 
-- `.colour delete {colour}`
+- `.colour remove {colour}`
     - remove the given colour 
+
+- `.autoassignrole`
+    - temporary command for toggling the auto assignment of the student role.
+    - will be removed once this is automatically done from the forum responses
 
 
 ### Event Commands:  
 Can be used by any Exec
-- `.event prep "{title}" text:{n} voice:{n} -p`
+- *`.event prep "{title}" text:{n} voice:{n} -p`
     - title = Name of the event - must have quotes
     - text:n = number of text channels 
     - voice:n = number of voice channels 
     - -p (optional) = set the channels to public on creation 
 
-- `.event open` 
+- *`.event open` 
     - sets all event channels to public 
 
-- `.event close`
+- *`.event close`
     - sets all event channels to private
 
-- `.event cleanup`
+- *`.event cleanup`
     - delete invite/channels related to the current event 
 
-- `.event invite` 
+- *`.event invite` 
     - Generates a temporary invite that lasts until 12am the day of creation
     - If an invite is already generated, share that one again
 
-- `.event greeting {message}`
+- *`.event greeting {message}`
     - set the message that displays when someone joins with an event invite

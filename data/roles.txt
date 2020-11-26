@@ -5,5 +5,12 @@ Alumni
 CSSA Execs
 WICS Execs
 .devClub Execs
+# Announcement Roles
+announcements
+cssa
+wics
+devclub
+game-night
+movie-night
 # Admin role
 admin
