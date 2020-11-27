@@ -133,10 +133,12 @@ async def on_member_join(member):
 
     if(autoAssign):
         #just student for now, will change later
-        print("auto assigning role for " + member.name)
+        print("auto assigning roles for " + member.name)
         autoRole = discord.utils.get(guild.roles, name="Student")
-        print("Role: " + autoRole.name)
+        autoRole2 = discord.utils.get(guild.roles, name="announcements")
+        print("Roles: " + autoRole.name + ", " + autoRole2.name)
         await member.add_roles(autoRole)
+        await member.add_roles(autoRole2)
 
 
 #### Commands ####
@@ -147,28 +149,6 @@ async def on_member_join(member):
 async def test(ctx, *args):
     #send the arguments of the command back to the user
     await ctx.send(' '.join(args))
-
-@bot.command()
-async def updateAllUsers(ctx, *args):
-
-    if(not hasPermission(ctx,"admin")):
-        await ctx.send("Error: You do not have permission to use this command.")
-        return
-
-    
-    totalCount = len(ctx.message.guild.members)
-    currentCount = 1
-    allMembers = ctx.message.guild.members
-    role = discord.utils.get(ctx.message.guild.roles, name="announcements")
-    if role:
-        for user in allMembers:
-            try:
-                await user.add_roles(role)
-                print("Finished member " + currentCount + "/" + totalCount + "  --" + user.name)
-            except:
-                print("Failed for user: " + user.name)
-            currentCount += 1
-        await ctx.send("Success. Announcement role added to all members")
 
 
 @bot.command()
