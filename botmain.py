@@ -126,9 +126,6 @@ async def on_member_join(member):
 
     guild = discord.utils.get(bot.guilds, name="UManitoba Computer Science Lounge")
 
-    if(not guild):
-        guild = discord.utils.get(bot.guilds, name="bot test")
-
     channel = discord.utils.get(guild.channels, name="introductions")
 
     if(greetMessage != ""):
@@ -137,7 +134,8 @@ async def on_member_join(member):
     if(autoAssign):
         #just student for now, will change later
         print("auto assigning role for " + member.name)
-        autoRole = discord.utils.get(member.guild.roles, name="Student")
+        autoRole = discord.utils.get(guild.roles, name="Student")
+        print("Role: " + autoRole.name)
         await member.add_roles(autoRole)
 
 
