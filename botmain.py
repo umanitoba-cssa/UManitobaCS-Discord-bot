@@ -136,6 +136,7 @@ async def on_member_join(member):
 
     if(autoAssign):
         #just student for now, will change later
+        print("auto assigning role for " + member.name)
         autoRole = discord.utils.get(member.guild.roles, name="Student")
         await member.add_roles(autoRole)
 
