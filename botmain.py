@@ -7,11 +7,9 @@ from dotenv import load_dotenv
 is_heroku = os.environ.get('IS_HEROKU', None)
 if is_heroku:
     TOKEN = os.environ.get('DISCORD_TOKEN', None)
-    GUILD = os.environ.get('DISCORD_GUILD', None)
 else:
     load_dotenv()
     TOKEN = os.getenv('DISCORD_TOKEN')
-    GUILD = os.getenv('DISCORD_GUILD')
 
 PREFIX = '.'
 
@@ -126,7 +124,11 @@ async def on_member_join(member):
     global greetMessage
     global autoAssign
 
-    guild = discord.utils.get(bot.guilds, name=GUILD)
+    guild = discord.utils.get(bot.guilds, name="UManitoba Computer Science Lounge")
+
+    if(not guild):
+        guild = discord.utils.get(bot.guilds, name="bot test")
+
     channel = discord.utils.get(guild.channels, name="introductions")
 
     if(greetMessage != ""):
@@ -361,23 +363,34 @@ async def unnotify(ctx, *args):
 
 
 @bot.command()
-async def setgreetmessage(ctx, *, arg):
+async def setgreetmessage(ctx, *, arg): 
     global greetMessage
 
     if(not hasPermission(ctx, "admin")):
         await ctx.send("Error: You do not have permission to use this command.")
         return
 
-    if(arg != ""):
+    if(arg):
         greetMessage = arg
         await ctx.send("New greet message set to:\n```" + arg + "```")
-    else:
-        greetMessage = ""
-        await ctx.send("Greet message removed.")
 
-    greetMsgFile = open("data/greetMsg.txt", "w")
-    greetMsgFile.write(greetMessage)
-    greetMsgFile.close()
+        greetMsgFile = open("data/greetMsg.txt", "w")
+        greetMsgFile.write(greetMessage)
+        greetMsgFile.close()
+
+@setgreetmessage.error
+async def setgreetmessage_error(ctx, error):
+    global greetMessage
+    if isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
+        if(not hasPermission(ctx, "admin")):
+            await ctx.send("Error: You do not have permission to use this command.")
+            return
+        await ctx.send("Greet message removed.")
+        greetMessage = ""
+        greetMsgFile = open("data/greetMsg.txt", "w")
+        greetMsgFile.write("")
+        greetMsgFile.close()
+       
 
 @bot.command()
 async def autoassignrole(ctx,*args):
