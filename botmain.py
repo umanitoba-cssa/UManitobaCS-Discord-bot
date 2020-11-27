@@ -149,6 +149,29 @@ async def test(ctx, *args):
     await ctx.send(' '.join(args))
 
 @bot.command()
+async def updateAllUsers(ctx, *args):
+
+    if(not hasPermission(ctx,"admin")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    
+    totalCount = len(ctx.message.guild.members)
+    currentCount = 1
+    allMembers = ctx.message.guild.members
+    role = discord.utils.get(ctx.message.guild.roles, name="announcements")
+    if role:
+        for user in allMembers:
+            try:
+                await user.add_roles(role)
+                print("Finished member " + currentCount + "/" + totalCount + "  --" + user.name)
+            except:
+                print("Failed for user: " + user.name)
+            currentCount += 1
+        await ctx.send("Success. Announcement role added to all members")
+
+
+@bot.command()
 async def iam(ctx, *args):
 
     if hasPermission(ctx,"registered"):
