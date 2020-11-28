@@ -9,10 +9,8 @@ A custom bot for the University of Manitoba's Computer Science Discord server.
     - use code from the existing script 
     - a way to manage flagged responses within the discord 
 - auto assign roles to people who joined with certain invites
-    - assign student/alumni roles, 
-    - maybe year roles too, include a year(s) question in the forum? 
+    - assign student/alumni roles, announcement roles, and year roles based on the forum response 
 - prep event channels through a command 
-- colours & year roles like we have now 
 - generate special invite for events through a command (not a temp invite)
     - Gives whoever joins a 'event' role that has limited access. 
     - auto kicks all users who have that role after 12am the day of the event
