@@ -334,6 +334,17 @@ async def notify(ctx, *args):
                 await ctx.send("Error: You already have this role.")
         else:
             await ctx.send("Error: Role `" + args[0] + "` not found in discord. This may be a backend issue.")
+    elif(args[0].lower() == 'all'):
+        user = ctx.message.author
+        rolesAdded = False
+        for i in announcementRoles:
+            role = discord.utils.get(ctx.message.guild.roles, name=i)
+            if(role not in user.roles):
+                await user.add_roles(role)
+                await ctx.send("Announcement role `" + role.name + "` set.")
+                rolesAdded = True
+        if(not rolesAdded):
+            await ctx.send("Error: You already have all available announcement roles.")
     else:
         await ctx.send("Error: Role `" + args[0] + "` not found.")
 
@@ -360,6 +371,17 @@ async def unnotify(ctx, *args):
                 await ctx.send("Error: You do not have this role.")
         else:
             await ctx.send("Error: Role `" + args[0] + "` not found in discord. This may be a backend issue.")
+    elif(args[0].lower() == 'all'):
+        user = ctx.message.author
+        rolesRemoved = False
+        for i in announcementRoles:
+            role = discord.utils.get(ctx.message.guild.roles, name=i)
+            if(role in user.roles):
+                await user.remove_roles(role)
+                await ctx.send("Announcement role `" + role.name + "` removed.")
+                rolesRemoved = True
+        if(not rolesRemoved):
+            await ctx.send("Error: You do not have any announcement roles to remove.")
     else:
         await ctx.send("Error: Role `" + args[0] + "` not found.")
 
