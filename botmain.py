@@ -385,7 +385,6 @@ async def unnotify(ctx, *args):
     else:
         await ctx.send("Error: Role `" + args[0] + "` not found.")
 
-
 @bot.command()
 async def setgreetmessage(ctx, *, arg): 
     global greetMessage
@@ -415,7 +414,6 @@ async def setgreetmessage_error(ctx, error):
         greetMsgFile.write("")
         greetMsgFile.close()
        
-
 @bot.command()
 async def autoassignrole(ctx,*args):
     global autoAssign
@@ -438,6 +436,32 @@ async def autoassignrole(ctx,*args):
         await ctx.send("Auto assignment of roles enabled.")
     elif(not autoAssign):
         await ctx.send("Auto assignment of roles disabled.")
+
+
+@bot.command()
+async def sendmessage(ctx, *, arg): 
+
+    if(not hasPermission(ctx, "admin")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    guild = discord.utils.get(bot.guilds, name="UManitoba Computer Science Lounge")
+
+    #assume message is in the format CHANNEL##MESSAGE
+    rawMessage = arg.split("##")
+    channel = discord.utils.get(guild.channels, name=rawMessage[0])
+    message = rawMessage[1]
+
+    if(channel):
+        channel.send(message)
+
+@sendmessage.error
+async def sendmessage_error(ctx, error):
+    if isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
+        if(not hasPermission(ctx, "admin")):
+            await ctx.send("Error: You do not have permission to use this command.")
+            return
+        await ctx.send("Error: No message to send.")
 
 
 bot.run(TOKEN)
