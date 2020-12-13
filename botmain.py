@@ -1,7 +1,6 @@
 import os
 import discord
 import random
-import asyncio
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -483,17 +482,15 @@ async def exams(ctx,*args):
     guild = discord.utils.get(bot.guilds, name="UManitoba Computer Science Lounge")
     voice_channel = discord.utils.get(guild.voice_channels, name="scream-into-the-void")
 
-    links = ["https://youtu.be/9M3NqnPhlSQ","https://youtu.be/SiMsRJpd-VA","https://youtu.be/-_ZNxsiIqgA"]
+    links = ["data/1.mp3","data/2.mp3","data/3.mp3"]
     url = links[random.randint(0,2)]
 
-    vc = await bot.join_voice_channel(voice_channel)
-    player = await vc.create_ytdl_player(url)
-    player.start()
-    while not player.is_done():
-            await asyncio.sleep(1)
-    # disconnect after the player has finished
-    player.stop()
+    vc = await voice_channel.connect()
+    vc.play(discord.FFmpegPCMAudio(url))
+    while(vc.is_playing()):
+        continue
     await vc.disconnect()
+
 
 
 bot.run(TOKEN)
