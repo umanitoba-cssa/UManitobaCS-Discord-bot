@@ -483,15 +483,11 @@ async def exams(ctx,*args):
     guild = discord.utils.get(bot.guilds, name="UManitoba Computer Science Lounge")
     voice_channel = discord.utils.get(guild.voice_channels, name="scream-into-the-void")
 
-    links = ["data/1.mp3","data/2.mp3","data/3.mp3"]
+    links = ['data/1.mp3','data/2.mp3','data/3.mp3']
     url = links[random.randint(0,2)]
 
     vc = await voice_channel.connect()
-    vc.play(discord.FFmpegPCMAudio(url))
-    while(vc.is_playing()):
-        await sleep(1)
-    await vc.disconnect()
-
+    vc.play(discord.FFmpegPCMAudio(url), after=await vc.disconnect())
 
 
 bot.run(TOKEN)
