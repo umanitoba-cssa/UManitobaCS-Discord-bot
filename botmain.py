@@ -1,6 +1,7 @@
 import os
 import discord
 import random
+from asyncio import sleep
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -488,7 +489,7 @@ async def exams(ctx,*args):
     vc = await voice_channel.connect()
     vc.play(discord.FFmpegPCMAudio(url))
     while(vc.is_playing()):
-        continue
+        await sleep(1)
     await vc.disconnect()
 
 
