@@ -1,7 +1,8 @@
 import os
 import discord
 import random
-from asyncio import sleep
+import youtube_dl
+import asyncio
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -477,17 +478,59 @@ async def sendmessage_error(ctx, error):
 
 
 #should play a random yelling sound effect in voice chat
+ytdl_format_options = {
+    'format': 'bestaudio/best',
+    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'auto',
+    'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
+}
+
+ffmpeg_options = {
+    'options': '-vn'
+}
+
+ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+class YTDLSource(discord.PCMVolumeTransformer):
+    def __init__(self, source, *, data, volume=0.5):
+        super().__init__(source, volume)
+
+        self.data = data
+
+        self.title = data.get('title')
+        self.url = data.get('url')
+
+    @classmethod
+    async def from_url(cls, url, *, loop=None, stream=False):
+        loop = loop or asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+
+        if 'entries' in data:
+            # take first item from a playlist
+            data = data['entries'][0]
+
+        filename = data['url'] if stream else ytdl.prepare_filename(data)
+        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+
 @bot.command()
 async def exams(ctx,*args):
 
     guild = discord.utils.get(bot.guilds, name="UManitoba Computer Science Lounge")
     voice_channel = discord.utils.get(guild.voice_channels, name="scream-into-the-void")
 
-    links = ['data/1.mp3','data/2.mp3','data/3.mp3']
+    links = ['https://youtu.be/9M3NqnPhlSQ','https://youtu.be/SiMsRJpd-VA','https://youtu.be/-_ZNxsiIqgA']
     url = links[random.randint(0,2)]
 
     vc = await voice_channel.connect()
-    vc.play(discord.FFmpegPCMAudio(url), after=await vc.disconnect())
+
+    player = await YTDLSource.from_url(url, loop=bot.loop, stream=True)
+    vc.play(player, after=await vc.disconnect())
 
 
 bot.run(TOKEN)
