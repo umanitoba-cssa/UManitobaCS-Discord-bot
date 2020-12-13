@@ -1,8 +1,8 @@
 import os
 import discord
-import random
-import youtube_dl
-import asyncio
+#import random
+#import youtube_dl
+#import asyncio
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -115,8 +115,8 @@ def hasPermission(ctx,level):
 #Start bot
 intent = discord.Intents(messages=True, members=True, guilds=True)
 bot = commands.Bot(command_prefix=PREFIX, intents = intent)
-if not discord.opus.is_loaded():
-    discord.opus.load_opus()
+#if not discord.opus.is_loaded():
+#   discord.opus.load_opus()
 
 
 @bot.event
@@ -479,7 +479,8 @@ async def sendmessage_error(ctx, error):
             return
         await ctx.send("Error: No message to send.")
 
-
+#for future me
+'''
 #should play a random yelling sound effect in voice chat
 ytdl_format_options = {
     'format': 'bestaudio/best',
@@ -534,6 +535,6 @@ async def exams(ctx,*args):
     player = await YTDLSource.from_url(url, loop=bot.loop, stream=True)
     vc.play(player, after=await vc.disconnect())
 
-
+'''
 bot.run(TOKEN)
 
