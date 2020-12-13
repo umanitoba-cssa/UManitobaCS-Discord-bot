@@ -115,6 +115,9 @@ def hasPermission(ctx,level):
 #Start bot
 intent = discord.Intents(messages=True, members=True, guilds=True)
 bot = commands.Bot(command_prefix=PREFIX, intents = intent)
+if not discord.opus.is_loaded():
+    discord.opus.load_opus()
+
 
 @bot.event
 async def on_ready():
@@ -520,7 +523,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 @bot.command()
 async def exams(ctx,*args):
-    discord.opus.load_opus('opus')
     guild = discord.utils.get(bot.guilds, name="UManitoba Computer Science Lounge")
     voice_channel = discord.utils.get(guild.voice_channels, name="scream-into-the-void")
 
