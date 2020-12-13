@@ -1,5 +1,7 @@
 import os
 import discord
+import random
+import asyncio
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -447,7 +449,7 @@ async def autoassignrole(ctx,*args):
     elif(not autoAssign):
         await ctx.send("Auto assignment of roles disabled.")
 
-
+## Fun commands
 @bot.command()
 async def sendmessage(ctx, *, arg): 
 
@@ -472,6 +474,26 @@ async def sendmessage_error(ctx, error):
             await ctx.send("Error: You do not have permission to use this command.")
             return
         await ctx.send("Error: No message to send.")
+
+
+#should play a random yelling sound effect in voice chat
+@bot.command()
+async def exams(ctx,*args):
+
+    guild = discord.utils.get(bot.guilds, name="UManitoba Computer Science Lounge")
+    voice_channel = discord.utils.get(guild.voice_channels, name="scream-into-the-void")
+
+    links = ["https://youtu.be/9M3NqnPhlSQ","https://youtu.be/SiMsRJpd-VA","https://youtu.be/-_ZNxsiIqgA"]
+    url = links[random.randint(0,2)]
+
+    vc = await bot.join_voice_channel(voice_channel)
+    player = await vc.create_ytdl_player(url)
+    player.start()
+    while not player.is_done():
+            await asyncio.sleep(1)
+    # disconnect after the player has finished
+    player.stop()
+    await vc.disconnect()
 
 
 bot.run(TOKEN)
