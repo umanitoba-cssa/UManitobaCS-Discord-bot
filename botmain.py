@@ -1,18 +1,20 @@
 import os
 import discord
-#import random
-#import youtube_dl
-#import asyncio
+import pymongo
 from discord.ext import commands
 from dotenv import load_dotenv
+from pymongo import message
+from pymongo.database import Database
 
 # Check if we are running on heroku or locally 
 is_heroku = os.environ.get('IS_HEROKU', None)
 if is_heroku:
     TOKEN = os.environ.get('DISCORD_TOKEN', None)
+    DB_PASS = os.environ.get('DB_PASS', None)
 else:
     load_dotenv()
     TOKEN = os.getenv('DISCORD_TOKEN')
+    DB_PASS = os.getenv('DB_PASS')
 
 PREFIX = '.'
 
@@ -21,49 +23,89 @@ colourRoles = []
 defaultRoles = []
 execRoles = []
 announcementRoles = []
-yearRoles = ['First Year', 'Second Year', 'Third Year', 'Fourth Year']
+yearRoles = []
+adminRoles = []
 
-adminRole = ""
-autoAssign = False
+autoAssign = True
+greetMessage = ""
 
-#read in data (should probably change from a txt file)
-coloursFile = open("data/colourRoles.txt","r")
-colourRoles = coloursFile.read().split("\n")
-coloursFile.close()
+dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
+db = Database
 
-#read in default roles
-roleFile = open("data/roles.txt","r")
-line = roleFile.readline()
+#read in data from db
+def readInData(givenDB):
+    global colourRoles
+    global defaultRoles
+    global execRoles
+    global announcementRoles
+    global yearRoles
+    global adminRoles
+    global greetMessage
+    global dbClient
+    global db
 
-#the roles.txt file must be formatted in the order
-# Default roles
-# Exec roles
-# Admin role
-# Announcement roles
-if(line[0] is "#"):
-    line = roleFile.readline()
-    while(line[0] is not "#"):
-        defaultRoles.append(line.replace("\n",""))
-        line = roleFile.readline()
+    db = dbClient[givenDB]
 
-if(line[0] is "#"):
-    line = roleFile.readline()
-    while(line[0] is not "#"):
-        execRoles.append(line.replace("\n",""))
-        line = roleFile.readline()
+    #colour roles
+    collection = db["colour_roles"]
+    rawValues = collection.find({},{"colour"})
+    for x in rawValues:
+        colourRoles.append(x["colour"])
+    print("\nColour roles imported.\nList:")
+    for x in colourRoles:
+        print(x)
 
-if(line[0] is "#"):
-    line = roleFile.readline()
-    while(line[0] is not "#"):
-        announcementRoles.append(line.replace("\n",""))
-        line = roleFile.readline()
+    #default roles
+    collection = db["default_roles"]
+    rawValues = collection.find({},{"name"})
+    for x in rawValues:
+        defaultRoles.append(x["name"])
+    print("\nDefault roles imported.\nList:")
+    for x in defaultRoles:
+        print(x)
 
-if(line[0] is "#"):
-    line = roleFile.readline()
-    adminRole = line.replace("\n","") 
-    line = roleFile.readline()
+    #exec roles
+    collection = db["exec_roles"]
+    rawValues = collection.find({},{"name"})
+    for x in rawValues:
+        execRoles.append(x["name"])
+    print("\nExec roles imported.\nList:")
+    for x in execRoles:
+        print(x)
 
-roleFile.close()
+    #announcement roles
+    collection = db["announcement_roles"]
+    rawValues = collection.find({},{"name"})
+    for x in rawValues:
+        announcementRoles.append(x["name"])
+    print("\nAnnouncement roles imported.\nList:")
+    for x in announcementRoles:
+        print(x)
+
+    #Year roles
+    collection = db["year_roles"]
+    rawValues = collection.find({},{"name"})
+    for x in rawValues:
+        yearRoles.append(x["name"])
+    print("\nYear roles imported.\nList:")
+    for x in yearRoles:
+        print(x)
+
+    #Admin roles
+    collection = db["admin_roles"]
+    rawValues = collection.find({},{"name"})
+    for x in rawValues:
+        adminRoles.append(x["name"])
+    print("\nAdmin roles imported.\nList:")
+    for x in adminRoles:
+        print(x)
+
+    #greet message
+    collection = db["greet_message"]
+    rawValues = collection.find({},{"message"})
+    greetMessage = rawValues[0][message]
+
+
 
 lowerRoleList = []
 for x in defaultRoles:
@@ -72,32 +114,19 @@ for x in execRoles:
     lowerRoleList.append(x.lower())
 for x in announcementRoles:
     lowerRoleList.append(x.lower())
-lowerRoleList.append(adminRole.lower())
+for x in adminRoles:
+    lowerRoleList.append(x.lower())
 
-#read in greet message
-greetMsgFile = open("data/greetMsg.txt", "r")
-greetMessage = greetMsgFile.read()
-greetMsgFile.close()
-
-#read in autoassign value
-aaFile = open("data/autoassign.txt","r")
-receivedVal = aaFile.read() 
-#true if it file reads "true", false if anything else
-if receivedVal == "True":
-    autoAssign = True 
-else:
-    autoAssign = False
-aaFile.close()
 
 #permission check function
 def hasPermission(ctx,level):
     user = ctx.message.author
     if(level is "admin"):
-        admin = discord.utils.get(ctx.message.guild.roles, name=adminRole)
-        if admin in user.roles:
-            return True 
-        else:
-            return False
+        for adminRole in adminRoles:
+            admin = discord.utils.get(ctx.message.guild.roles, name=adminRole)
+            if admin in user.roles:
+                return True 
+        return False
     elif(level is "registered"):
         roles = []
         #add every allowed role to 'roles'
@@ -106,7 +135,8 @@ def hasPermission(ctx,level):
             roles.append(discord.utils.get(ctx.message.guild.roles, name=role))
         for role in execRoles:
             roles.append(discord.utils.get(ctx.message.guild.roles, name=role))
-        roles.append(discord.utils.get(ctx.message.guild.roles, name=adminRole))
+        for role in adminRoles:
+            roles.append(discord.utils.get(ctx.message.guild.roles, name=role))
         for role in roles:
             if role in user.roles:
                 return True 
@@ -115,8 +145,6 @@ def hasPermission(ctx,level):
 #Start bot
 intent = discord.Intents(messages=True, members=True, guilds=True)
 bot = commands.Bot(command_prefix=PREFIX, intents = intent)
-#if not discord.opus.is_loaded():
-#   discord.opus.load_opus()
 
 
 @bot.event
@@ -124,6 +152,10 @@ async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     #guild = discord.utils.get(bot.guilds, name=GUILD)
     #channel = discord.utils.get(guild.channels, name="general")
+    
+    for server in bot.guilds:
+        if server.name == "UManitoba Computer Science Lounge":
+            readInData("csDiscord")
 
 @bot.event
 async def on_member_join(member):
@@ -210,6 +242,7 @@ async def iamnot(ctx, *args):
 
 @bot.command()
 async def iamn(ctx, *args):
+    global db
 
     if hasPermission(ctx,"registered"):
         if(len(args) != 0):
@@ -276,10 +309,11 @@ async def colour(ctx, *args):
                         await guild.create_role(name=roleName,colour=discord.Colour(int(colour[1:], 16)))
                         await ctx.send("Colour role: `" + roleName + "` added.")
 
-                        #add the new colour to our file, then add it to our list
-                        coloursFile = open("data/colourRoles.txt", "a")
-                        coloursFile.write(roleName + "\n")
-                        coloursFile.close()
+                        #add the new colour to the db, then add it to our list
+                        collection = db["colour_roles"]
+                        dict = { "colour": roleName }
+                        collection.insert_one(dict)
+
                         colourRoles.append(roleName)
                     except:
                         await ctx.send("Error: Invalid hex input: " + colour)
@@ -299,11 +333,12 @@ async def colour(ctx, *args):
                     await role.delete()
                     #colour exits, remove it
                     colourRoles.remove(args[1].lower())
-                    #rewrite the file
-                    coloursFile = open("data/colourRoles.txt", "w")
-                    for i in colourRoles:
-                        coloursFile.write(i + "\n")
-                    coloursFile.close()
+                    
+                    #remove it from the db
+                    collection = db["colour_roles"]
+                    dict = { "colour": args[1].lower() }
+                    collection.delete_one(dict)
+                    
                     await ctx.send("Colour role `" + args[1].lower() + "` deleted.")
 
                 except discord.Forbidden:
@@ -410,12 +445,14 @@ async def setgreetmessage(ctx, *, arg):
         return
 
     if(arg):
-        greetMessage = arg
         await ctx.send("New greet message set to:\n```" + arg + "```")
 
-        greetMsgFile = open("data/greetMsg.txt", "w")
-        greetMsgFile.write(greetMessage)
-        greetMsgFile.close()
+        collection = db["greet_message"]
+        dict = { "message": greetMessage }
+        new_dict = { "$set": { "message": arg } }
+        collection.update_one(dict, new_dict)
+        greetMessage = arg
+
 
 @setgreetmessage.error
 async def setgreetmessage_error(ctx, error):
@@ -425,10 +462,11 @@ async def setgreetmessage_error(ctx, error):
             await ctx.send("Error: You do not have permission to use this command.")
             return
         await ctx.send("Greet message removed.")
+        collection = db["greet_message"]
+        dict = { "message": greetMessage }
+        new_dict = { "$set": { "message": "" } }
+        collection.update_one(dict, new_dict)
         greetMessage = ""
-        greetMsgFile = open("data/greetMsg.txt", "w")
-        greetMsgFile.write("")
-        greetMsgFile.close()
        
 @bot.command()
 async def autoassignrole(ctx,*args):
@@ -443,10 +481,6 @@ async def autoassignrole(ctx,*args):
         return
 
     autoAssign = not autoAssign
-
-    aaFile = open("data/autoassign.txt","w")
-    aaFile.write(str(autoAssign))
-    aaFile.close()
 
     if(autoAssign):
         await ctx.send("Auto assignment of roles enabled.")
