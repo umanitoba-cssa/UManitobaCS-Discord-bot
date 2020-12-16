@@ -4,6 +4,7 @@ import pymongo
 from discord.ext import commands
 from dotenv import load_dotenv
 from pymongo import message
+from pymongo.database import Database
 
 # Check if we are running on heroku or locally 
 is_heroku = os.environ.get('IS_HEROKU', None)
@@ -28,6 +29,9 @@ adminRoles = []
 autoAssign = True
 greetMessage = ""
 
+dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
+db = Database
+
 #read in data from db
 def readInData(givenDB):
     global colourRoles
@@ -37,8 +41,9 @@ def readInData(givenDB):
     global yearRoles
     global adminRoles
     global greetMessage
+    global dbClient
+    global db
 
-    dbClient = client = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
     db = dbClient[givenDB]
 
     #colour roles
@@ -117,11 +122,11 @@ for x in adminRoles:
 def hasPermission(ctx,level):
     user = ctx.message.author
     if(level is "admin"):
-        admin = discord.utils.get(ctx.message.guild.roles, name=adminRole)
-        if admin in user.roles:
-            return True 
-        else:
-            return False
+        for adminRole in adminRoles:
+            admin = discord.utils.get(ctx.message.guild.roles, name=adminRole)
+            if admin in user.roles:
+                return True 
+        return False
     elif(level is "registered"):
         roles = []
         #add every allowed role to 'roles'
@@ -130,7 +135,8 @@ def hasPermission(ctx,level):
             roles.append(discord.utils.get(ctx.message.guild.roles, name=role))
         for role in execRoles:
             roles.append(discord.utils.get(ctx.message.guild.roles, name=role))
-        roles.append(discord.utils.get(ctx.message.guild.roles, name=adminRole))
+        for role in adminRoles:
+            roles.append(discord.utils.get(ctx.message.guild.roles, name=role))
         for role in roles:
             if role in user.roles:
                 return True 
@@ -139,8 +145,6 @@ def hasPermission(ctx,level):
 #Start bot
 intent = discord.Intents(messages=True, members=True, guilds=True)
 bot = commands.Bot(command_prefix=PREFIX, intents = intent)
-#if not discord.opus.is_loaded():
-#   discord.opus.load_opus()
 
 
 @bot.event
@@ -148,6 +152,10 @@ async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     #guild = discord.utils.get(bot.guilds, name=GUILD)
     #channel = discord.utils.get(guild.channels, name="general")
+    
+    for server in bot.guilds:
+        if server.name == "UManitoba Computer Science Lounge":
+            readInData("csDiscord")
 
 @bot.event
 async def on_member_join(member):
@@ -234,6 +242,7 @@ async def iamnot(ctx, *args):
 
 @bot.command()
 async def iamn(ctx, *args):
+    global db
 
     if hasPermission(ctx,"registered"):
         if(len(args) != 0):
@@ -300,10 +309,11 @@ async def colour(ctx, *args):
                         await guild.create_role(name=roleName,colour=discord.Colour(int(colour[1:], 16)))
                         await ctx.send("Colour role: `" + roleName + "` added.")
 
-                        #add the new colour to our file, then add it to our list
-                        coloursFile = open("data/colourRoles.txt", "a")
-                        coloursFile.write(roleName + "\n")
-                        coloursFile.close()
+                        #add the new colour to the db, then add it to our list
+                        collection = db["colour_roles"]
+                        dict = { "colour": roleName }
+                        collection.insert_one(dict)
+
                         colourRoles.append(roleName)
                     except:
                         await ctx.send("Error: Invalid hex input: " + colour)
@@ -323,11 +333,12 @@ async def colour(ctx, *args):
                     await role.delete()
                     #colour exits, remove it
                     colourRoles.remove(args[1].lower())
-                    #rewrite the file
-                    coloursFile = open("data/colourRoles.txt", "w")
-                    for i in colourRoles:
-                        coloursFile.write(i + "\n")
-                    coloursFile.close()
+                    
+                    #remove it from the db
+                    collection = db["colour_roles"]
+                    dict = { "colour": args[1].lower() }
+                    collection.delete_one(dict)
+                    
                     await ctx.send("Colour role `" + args[1].lower() + "` deleted.")
 
                 except discord.Forbidden:
@@ -434,12 +445,14 @@ async def setgreetmessage(ctx, *, arg):
         return
 
     if(arg):
-        greetMessage = arg
         await ctx.send("New greet message set to:\n```" + arg + "```")
 
-        greetMsgFile = open("data/greetMsg.txt", "w")
-        greetMsgFile.write(greetMessage)
-        greetMsgFile.close()
+        collection = db["greet_message"]
+        dict = { "message": greetMessage }
+        new_dict = { "$set": { "message": arg } }
+        collection.update_one(dict, new_dict)
+        greetMessage = arg
+
 
 @setgreetmessage.error
 async def setgreetmessage_error(ctx, error):
@@ -449,10 +462,11 @@ async def setgreetmessage_error(ctx, error):
             await ctx.send("Error: You do not have permission to use this command.")
             return
         await ctx.send("Greet message removed.")
+        collection = db["greet_message"]
+        dict = { "message": greetMessage }
+        new_dict = { "$set": { "message": "" } }
+        collection.update_one(dict, new_dict)
         greetMessage = ""
-        greetMsgFile = open("data/greetMsg.txt", "w")
-        greetMsgFile.write("")
-        greetMsgFile.close()
        
 @bot.command()
 async def autoassignrole(ctx,*args):
@@ -467,10 +481,6 @@ async def autoassignrole(ctx,*args):
         return
 
     autoAssign = not autoAssign
-
-    aaFile = open("data/autoassign.txt","w")
-    aaFile.write(str(autoAssign))
-    aaFile.close()
 
     if(autoAssign):
         await ctx.send("Auto assignment of roles enabled.")

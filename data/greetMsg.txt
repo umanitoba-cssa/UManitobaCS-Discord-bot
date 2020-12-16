@@ -1,3 +1,0 @@
-Welcome %user%! Introduce yourself! 
-
-Also, please set your server nickname to be the name you go by in person. This can be achieved by right clicking your profile bubble on the right, and selecting "Change Nickname". Thanks!
