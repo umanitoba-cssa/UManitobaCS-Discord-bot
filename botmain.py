@@ -51,7 +51,7 @@ def readInData(givenDB):
     rawValues = collection.find({},{"colour"})
     for x in rawValues:
         colourRoles.append(x["colour"])
-    print("\nColour roles imported.\nList:")
+    print("\nColour roles imported:")
     for x in colourRoles:
         print(x)
 
@@ -60,7 +60,7 @@ def readInData(givenDB):
     rawValues = collection.find({},{"name"})
     for x in rawValues:
         defaultRoles.append(x["name"])
-    print("\nDefault roles imported.\nList:")
+    print("\nDefault roles imported:")
     for x in defaultRoles:
         print(x)
 
@@ -69,7 +69,7 @@ def readInData(givenDB):
     rawValues = collection.find({},{"name"})
     for x in rawValues:
         execRoles.append(x["name"])
-    print("\nExec roles imported.\nList:")
+    print("\nExec roles imported:")
     for x in execRoles:
         print(x)
 
@@ -78,7 +78,7 @@ def readInData(givenDB):
     rawValues = collection.find({},{"name"})
     for x in rawValues:
         announcementRoles.append(x["name"])
-    print("\nAnnouncement roles imported.\nList:")
+    print("\nAnnouncement roles imported:")
     for x in announcementRoles:
         print(x)
 
@@ -87,7 +87,7 @@ def readInData(givenDB):
     rawValues = collection.find({},{"name"})
     for x in rawValues:
         yearRoles.append(x["name"])
-    print("\nYear roles imported.\nList:")
+    print("\nYear roles imported:")
     for x in yearRoles:
         print(x)
 
@@ -96,14 +96,14 @@ def readInData(givenDB):
     rawValues = collection.find({},{"name"})
     for x in rawValues:
         adminRoles.append(x["name"])
-    print("\nAdmin roles imported.\nList:")
+    print("\nAdmin roles imported:")
     for x in adminRoles:
         print(x)
 
     #greet message
     collection = db["greet_message"]
     rawValues = collection.find({},{"message"})
-    greetMessage = rawValues[0][message]
+    greetMessage = rawValues[0]["message"]
 
 
 
