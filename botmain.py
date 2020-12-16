@@ -1,18 +1,19 @@
 import os
 import discord
-#import random
-#import youtube_dl
-#import asyncio
+import pymongo
 from discord.ext import commands
 from dotenv import load_dotenv
+from pymongo import message
 
 # Check if we are running on heroku or locally 
 is_heroku = os.environ.get('IS_HEROKU', None)
 if is_heroku:
     TOKEN = os.environ.get('DISCORD_TOKEN', None)
+    DB_PASS = os.environ.get('DB_PASS', None)
 else:
     load_dotenv()
     TOKEN = os.getenv('DISCORD_TOKEN')
+    DB_PASS = os.getenv('DB_PASS')
 
 PREFIX = '.'
 
@@ -21,49 +22,85 @@ colourRoles = []
 defaultRoles = []
 execRoles = []
 announcementRoles = []
-yearRoles = ['First Year', 'Second Year', 'Third Year', 'Fourth Year']
+yearRoles = []
+adminRoles = []
 
-adminRole = ""
-autoAssign = False
+autoAssign = True
+greetMessage = ""
 
-#read in data (should probably change from a txt file)
-coloursFile = open("data/colourRoles.txt","r")
-colourRoles = coloursFile.read().split("\n")
-coloursFile.close()
+#read in data from db
+def readInData(givenDB):
+    global colourRoles
+    global defaultRoles
+    global execRoles
+    global announcementRoles
+    global yearRoles
+    global adminRoles
+    global greetMessage
 
-#read in default roles
-roleFile = open("data/roles.txt","r")
-line = roleFile.readline()
+    dbClient = client = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
+    db = dbClient[givenDB]
 
-#the roles.txt file must be formatted in the order
-# Default roles
-# Exec roles
-# Admin role
-# Announcement roles
-if(line[0] is "#"):
-    line = roleFile.readline()
-    while(line[0] is not "#"):
-        defaultRoles.append(line.replace("\n",""))
-        line = roleFile.readline()
+    #colour roles
+    collection = db["colour_roles"]
+    rawValues = collection.find({},{"colour"})
+    for x in rawValues:
+        colourRoles.append(x["colour"])
+    print("\nColour roles imported.\nList:")
+    for x in colourRoles:
+        print(x)
 
-if(line[0] is "#"):
-    line = roleFile.readline()
-    while(line[0] is not "#"):
-        execRoles.append(line.replace("\n",""))
-        line = roleFile.readline()
+    #default roles
+    collection = db["default_roles"]
+    rawValues = collection.find({},{"name"})
+    for x in rawValues:
+        defaultRoles.append(x["name"])
+    print("\nDefault roles imported.\nList:")
+    for x in defaultRoles:
+        print(x)
 
-if(line[0] is "#"):
-    line = roleFile.readline()
-    while(line[0] is not "#"):
-        announcementRoles.append(line.replace("\n",""))
-        line = roleFile.readline()
+    #exec roles
+    collection = db["exec_roles"]
+    rawValues = collection.find({},{"name"})
+    for x in rawValues:
+        execRoles.append(x["name"])
+    print("\nExec roles imported.\nList:")
+    for x in execRoles:
+        print(x)
 
-if(line[0] is "#"):
-    line = roleFile.readline()
-    adminRole = line.replace("\n","") 
-    line = roleFile.readline()
+    #announcement roles
+    collection = db["announcement_roles"]
+    rawValues = collection.find({},{"name"})
+    for x in rawValues:
+        announcementRoles.append(x["name"])
+    print("\nAnnouncement roles imported.\nList:")
+    for x in announcementRoles:
+        print(x)
 
-roleFile.close()
+    #Year roles
+    collection = db["year_roles"]
+    rawValues = collection.find({},{"name"})
+    for x in rawValues:
+        yearRoles.append(x["name"])
+    print("\nYear roles imported.\nList:")
+    for x in yearRoles:
+        print(x)
+
+    #Admin roles
+    collection = db["admin_roles"]
+    rawValues = collection.find({},{"name"})
+    for x in rawValues:
+        adminRoles.append(x["name"])
+    print("\nAdmin roles imported.\nList:")
+    for x in adminRoles:
+        print(x)
+
+    #greet message
+    collection = db["greet_message"]
+    rawValues = collection.find({},{"message"})
+    greetMessage = rawValues[0][message]
+
+
 
 lowerRoleList = []
 for x in defaultRoles:
@@ -72,22 +109,9 @@ for x in execRoles:
     lowerRoleList.append(x.lower())
 for x in announcementRoles:
     lowerRoleList.append(x.lower())
-lowerRoleList.append(adminRole.lower())
+for x in adminRoles:
+    lowerRoleList.append(x.lower())
 
-#read in greet message
-greetMsgFile = open("data/greetMsg.txt", "r")
-greetMessage = greetMsgFile.read()
-greetMsgFile.close()
-
-#read in autoassign value
-aaFile = open("data/autoassign.txt","r")
-receivedVal = aaFile.read() 
-#true if it file reads "true", false if anything else
-if receivedVal == "True":
-    autoAssign = True 
-else:
-    autoAssign = False
-aaFile.close()
 
 #permission check function
 def hasPermission(ctx,level):
