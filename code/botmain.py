@@ -1,6 +1,7 @@
 import os
 import discord
 import pymongo
+import data_structures
 from discord.ext import commands
 from dotenv import load_dotenv
 from pymongo import message
@@ -18,111 +19,87 @@ else:
 
 PREFIX = '.'
 
-#lists
-colourRoles = []
-defaultRoles = []
-execRoles = []
-announcementRoles = []
-yearRoles = []
-adminRoles = []
-
-autoAssign = True
-greetMessage = ""
+connectedServers = []
 
 dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
-db = Database
 
 #read in data from db
-def readInData(givenDB):
-    global colourRoles
-    global defaultRoles
-    global execRoles
-    global announcementRoles
-    global yearRoles
-    global adminRoles
-    global greetMessage
-    global dbClient
-    global db
+def readInData(serverName):
+    
+    server = data_structures.Server(serverName)
 
-    db = dbClient[givenDB]
+    global dbClient
+
+    db = dbClient[serverName]
 
     #colour roles
     collection = db["colour_roles"]
     rawValues = collection.find({},{"colour"})
     for x in rawValues:
-        colourRoles.append(x["colour"])
+        server.colourRoles.append(x["colour"])
     print("\nColour roles imported:")
-    for x in colourRoles:
+    for x in server.colourRoles:
         print(x)
 
     #default roles
     collection = db["default_roles"]
     rawValues = collection.find({},{"name"})
     for x in rawValues:
-        defaultRoles.append(x["name"])
+        server.defaultRoles.append(x["name"])
     print("\nDefault roles imported:")
-    for x in defaultRoles:
+    for x in server.defaultRoles:
         print(x)
 
     #exec roles
     collection = db["exec_roles"]
     rawValues = collection.find({},{"name"})
     for x in rawValues:
-        execRoles.append(x["name"])
+        server.execRoles.append(x["name"])
     print("\nExec roles imported:")
-    for x in execRoles:
+    for x in server.execRoles:
         print(x)
 
     #announcement roles
     collection = db["announcement_roles"]
     rawValues = collection.find({},{"name"})
     for x in rawValues:
-        announcementRoles.append(x["name"])
+        server.announcementRoles.append(x["name"])
     print("\nAnnouncement roles imported:")
-    for x in announcementRoles:
+    for x in server.announcementRoles:
         print(x)
 
     #Year roles
     collection = db["year_roles"]
     rawValues = collection.find({},{"name"})
     for x in rawValues:
-        yearRoles.append(x["name"])
+        server.yearRoles.append(x["name"])
     print("\nYear roles imported:")
-    for x in yearRoles:
+    for x in server.yearRoles:
         print(x)
 
     #Admin roles
     collection = db["admin_roles"]
     rawValues = collection.find({},{"name"})
     for x in rawValues:
-        adminRoles.append(x["name"])
+        server.adminRoles.append(x["name"])
     print("\nAdmin roles imported:")
-    for x in adminRoles:
+    for x in server.adminRoles:
         print(x)
 
     #greet message
     collection = db["greet_message"]
     rawValues = collection.find({},{"message"})
-    greetMessage = rawValues[0]["message"]
+    server.greetMessage = rawValues[0]["message"]
 
-
-
-lowerRoleList = []
-for x in defaultRoles:
-    lowerRoleList.append(x.lower())
-for x in execRoles:
-    lowerRoleList.append(x.lower())
-for x in announcementRoles:
-    lowerRoleList.append(x.lower())
-for x in adminRoles:
-    lowerRoleList.append(x.lower())
+    connectedServers.append(server)
 
 
 #permission check function
 def hasPermission(ctx,level):
     user = ctx.message.author
+    server = getServer(ctx)
     if(level is "admin"):
-        for adminRole in adminRoles:
+        for adminRole in server.adminRoles:
             admin = discord.utils.get(ctx.message.guild.roles, name=adminRole)
             if admin in user.roles:
                 return True 
@@ -130,17 +107,24 @@ def hasPermission(ctx,level):
     elif(level is "registered"):
         roles = []
         #add every allowed role to 'roles'
-        for role in defaultRoles:
+        for role in server.defaultRoles:
             #convert the strings into actual role objects
             roles.append(discord.utils.get(ctx.message.guild.roles, name=role))
-        for role in execRoles:
+        for role in server.execRoles:
             roles.append(discord.utils.get(ctx.message.guild.roles, name=role))
-        for role in adminRoles:
+        for role in server.adminRoles:
             roles.append(discord.utils.get(ctx.message.guild.roles, name=role))
         for role in roles:
             if role in user.roles:
                 return True 
         return False
+
+def getServer(ctx):
+    for i in connectedServers:
+        if ctx.message.guild.name == i.displayName:
+            return i
+    else:
+        return -1
 
 #Start bot
 intent = discord.Intents(messages=True, members=True, guilds=True)
@@ -154,22 +138,24 @@ async def on_ready():
     #channel = discord.utils.get(guild.channels, name="general")
     
     for server in bot.guilds:
-        if server.name == "UManitoba Computer Science Lounge":
-            readInData("csDiscord")
+        readInData(server.name)
 
 @bot.event
 async def on_member_join(member):
-    global greetMessage
-    global autoAssign
 
     guild = discord.utils.get(bot.guilds, name="UManitoba Computer Science Lounge")
 
     channel = discord.utils.get(guild.channels, name="introductions")
 
-    if(greetMessage != ""):
-        await channel.send(greetMessage.replace(f"%user%", member.mention))
+    server = data_structures.Server
+    for i in connectedServers:
+        if i.displayName == "UManitoba Computer Science Lounge":
+            server  = i
 
-    if(autoAssign):
+    if(server.greetMessage != ""):
+        await channel.send(server.greetMessage.replace(f"%user%", member.mention))
+
+    if(server.autoAssign):
         #just student for now, will change later
         print("auto assigning roles for " + member.name)
         autoRole = discord.utils.get(guild.roles, name="Student")
@@ -192,6 +178,8 @@ async def test(ctx, *args):
 @bot.command()
 async def iam(ctx, *args):
 
+    server = getServer(ctx)
+
     if hasPermission(ctx,"registered"):
         if(len(args) != 0):
 
@@ -199,12 +187,12 @@ async def iam(ctx, *args):
             #check if the user is adding a year role 
             year = args[0].lower().capitalize() + " Year"
 
-            if(args[0] in colourRoles):
+            if(args[0] in server.colourRoles):
 
                 #check if the user has a colour role already
                 role = discord.Role
                 roleFound = False
-                for i in colourRoles:
+                for i in server.colourRoles:
                     if discord.utils.get(ctx.message.guild.roles, name=i) in user.roles:
                         role = discord.utils.get(ctx.message.guild.roles, name=i)
                         roleFound = True
@@ -220,7 +208,7 @@ async def iam(ctx, *args):
                 else:
                     await ctx.send("Error: Role `" + args[0] + "` not found in discord. This may be a backend issue.")
 
-            elif(year in yearRoles):
+            elif(year in server.yearRoles):
                 if(len(args) == 2 and args[1] == 'year'):
                     if(discord.utils.get(ctx.message.guild.roles, name=year) in user.roles):
                         await ctx.send("Error: You already have the `" + year + "` role.")
@@ -242,7 +230,7 @@ async def iamnot(ctx, *args):
 
 @bot.command()
 async def iamn(ctx, *args):
-    global db
+    server = getServer(ctx)
 
     if hasPermission(ctx,"registered"):
         if(len(args) != 0):
@@ -250,11 +238,11 @@ async def iamn(ctx, *args):
             user = ctx.message.author
             year = args[0].lower().capitalize() + " Year"
 
-            if(args[0] in colourRoles):
+            if(args[0] in server.colourRoles):
                 #check if the user has a colour role to remove
                 role = discord.Role
                 roleFound = False
-                for i in colourRoles:
+                for i in server.colourRoles:
                     if discord.utils.get(ctx.message.guild.roles, name=i) in user.roles:
                         role = discord.utils.get(ctx.message.guild.roles, name=i)
                         roleFound = True
@@ -269,7 +257,7 @@ async def iamn(ctx, *args):
                 else:
                     await ctx.send("Error: No colour role to remove.")
 
-            elif(year in yearRoles):
+            elif(year in server.yearRoles):
                 if(len(args) == 2 and args[1] == 'year'):
                     role = discord.utils.get(ctx.message.guild.roles, name=year)
                     if role in user.roles:
@@ -288,7 +276,10 @@ async def iamn(ctx, *args):
 
 @bot.command()
 async def colour(ctx, *args):
-
+    server = getServer(ctx)
+    global dbClient
+    db = dbClient[server.displayName]
+    
     if(not hasPermission(ctx,"admin")):
         await ctx.send("Error: You do not have permission to use this command.")
         return
@@ -301,7 +292,7 @@ async def colour(ctx, *args):
         # adding colours
         if(len(args) == 3):
             colour = args[1]
-            if(args[2].lower() not in colourRoles and args[2].lower() not in lowerRoleList):
+            if(args[2].lower() not in server.colourRoles and args[2].lower() not in server.lowerRoleList()):
                 if(colour[0] == '#' and len(colour) == 7):
                     try:
                         guild = ctx.guild
@@ -314,7 +305,7 @@ async def colour(ctx, *args):
                         dict = { "colour": roleName }
                         collection.insert_one(dict)
 
-                        colourRoles.append(roleName)
+                        server.colourRoles.append(roleName)
                     except:
                         await ctx.send("Error: Invalid hex input: " + colour)
                 else:
@@ -328,11 +319,11 @@ async def colour(ctx, *args):
         #removing colours 
         if(len(args) == 2):
             role = discord.utils.get(ctx.message.guild.roles, name=args[1].lower())
-            if(args[1].lower() in colourRoles and role):
+            if(args[1].lower() in server.colourRoles and role):
                 try:
                     await role.delete()
                     #colour exits, remove it
-                    colourRoles.remove(args[1].lower())
+                    server.colourRoles.remove(args[1].lower())
                     
                     #remove it from the db
                     collection = db["colour_roles"]
@@ -354,6 +345,7 @@ async def colour(ctx, *args):
 
 @bot.command()
 async def notify(ctx, *args):
+    server = getServer(ctx)
 
     if(not hasPermission(ctx,"registered")):
         await ctx.send("Error: You do not have permission to use this command.")
@@ -364,7 +356,7 @@ async def notify(ctx, *args):
         return
 
 
-    if(args[0].lower() in announcementRoles):
+    if(args[0].lower() in server.announcementRoles):
         role = discord.utils.get(ctx.message.guild.roles, name=args[0].lower())
         user = ctx.message.author
         if(role):
@@ -378,7 +370,7 @@ async def notify(ctx, *args):
     elif(args[0].lower() == 'all'):
         user = ctx.message.author
         rolesAdded = []
-        for i in announcementRoles:
+        for i in server.announcementRoles:
             role = discord.utils.get(ctx.message.guild.roles, name=i)
             if(role not in user.roles):
                 await user.add_roles(role)
@@ -397,6 +389,7 @@ async def notify(ctx, *args):
 
 @bot.command()
 async def unnotify(ctx, *args):
+    server = getServer(ctx)
 
     if(not hasPermission(ctx,"registered")):
         await ctx.send("Error: You do not have permission to use this command.")
@@ -406,7 +399,7 @@ async def unnotify(ctx, *args):
         await ctx.send("Error: Correct format is: `" + PREFIX + r"unnotify {category}`.")
         return
 
-    if(args[0].lower() in announcementRoles):
+    if(args[0].lower() in server.announcementRoles):
         role = discord.utils.get(ctx.message.guild.roles, name=args[0].lower())
         user = ctx.message.author
         if(role):
@@ -420,7 +413,7 @@ async def unnotify(ctx, *args):
     elif(args[0].lower() == 'all'):
         user = ctx.message.author
         rolesRemoved = []
-        for i in announcementRoles:
+        for i in server.announcementRoles:
             role = discord.utils.get(ctx.message.guild.roles, name=i)
             if(role in user.roles):
                 await user.remove_roles(role)
@@ -438,7 +431,9 @@ async def unnotify(ctx, *args):
 
 @bot.command()
 async def setgreetmessage(ctx, *, arg): 
-    global greetMessage
+    server = getServer(ctx)
+    global dbClient
+    db = dbClient[server.displayName]
 
     if(not hasPermission(ctx, "admin")):
         await ctx.send("Error: You do not have permission to use this command.")
@@ -448,7 +443,7 @@ async def setgreetmessage(ctx, *, arg):
         await ctx.send("New greet message set to:\n```" + arg + "```")
 
         collection = db["greet_message"]
-        dict = { "message": greetMessage }
+        dict = { "message": server.greetMessage }
         new_dict = { "$set": { "message": arg } }
         collection.update_one(dict, new_dict)
         greetMessage = arg
@@ -456,21 +451,24 @@ async def setgreetmessage(ctx, *, arg):
 
 @setgreetmessage.error
 async def setgreetmessage_error(ctx, error):
-    global greetMessage
+    server = getServer(ctx)
+    global dbClient
+    db = dbClient[server.displayName]
+
     if isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
         if(not hasPermission(ctx, "admin")):
             await ctx.send("Error: You do not have permission to use this command.")
             return
         await ctx.send("Greet message removed.")
         collection = db["greet_message"]
-        dict = { "message": greetMessage }
+        dict = { "message": server.greetMessage }
         new_dict = { "$set": { "message": "" } }
         collection.update_one(dict, new_dict)
-        greetMessage = ""
+        server.greetMessage = ""
        
 @bot.command()
 async def autoassignrole(ctx,*args):
-    global autoAssign
+    server = getServer(ctx)
 
     if(not hasPermission(ctx, "admin")):
         await ctx.send("Error: You do not have permission to use this command.")
@@ -480,11 +478,11 @@ async def autoassignrole(ctx,*args):
         await ctx.send("Error: No parameters are accepted for this command.")
         return
 
-    autoAssign = not autoAssign
+    server.autoAssign = not server.autoAssign
 
-    if(autoAssign):
+    if(server.autoAssign):
         await ctx.send("Auto assignment of roles enabled.")
-    elif(not autoAssign):
+    elif(not server.autoAssign):
         await ctx.send("Auto assignment of roles disabled.")
 
 ## Fun commands
