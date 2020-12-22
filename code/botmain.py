@@ -26,7 +26,10 @@ dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p
 #read in data from db
 def readInData(serverName):
     
-    server = utils.Server(serverName)
+    if(serverName == "csDiscord"):
+        server = utils.Server("UManitoba Computer Science Lounge")
+    else:
+        server = utils.Server(serverName)
 
     global dbClient
 
@@ -91,6 +94,10 @@ def readInData(serverName):
     rawValues = collection.find({},{"message"})
     server.greetMessage = rawValues[0]["message"]
 
+    print("\nLoaded in the following greet message:\n" + server.greetMessage)
+
+    print("\nFinished loading in data for " + server.displayName)
+
     connectedServers.append(server)
 
 
@@ -138,24 +145,29 @@ async def on_ready():
     #channel = discord.utils.get(guild.channels, name="general")
     
     for server in bot.guilds:
-        readInData(server.name)
+        if(server.name == "UManitoba Computer Science Lounge"):
+            readInData("csDiscord")
+        else:
+            readInData(server.name.replace(" ","-"))
 
 @bot.event
 async def on_member_join(member):
 
-    guild = discord.utils.get(bot.guilds, name="UManitoba Computer Science Lounge")
+    guild = member.guild
 
+    #guild must have a channel named "introductions"
     channel = discord.utils.get(guild.channels, name="introductions")
 
-    server = data_structures.Server
+    server = utils.Server
     for i in connectedServers:
-        if i.displayName == "UManitoba Computer Science Lounge":
+        if i.displayName == guild.name:
             server  = i
 
     if(server.greetMessage != ""):
         await channel.send(server.greetMessage.replace(f"%user%", member.mention))
 
-    if(server.autoAssign):
+
+    if(server.autoAssign and server.displayName == "UManitoba Computer Science Lounge"):
         #just student for now, will change later
         print("auto assigning roles for " + member.name)
         autoRole = discord.utils.get(guild.roles, name="Student")
@@ -488,12 +500,13 @@ async def autoassignrole(ctx,*args):
 ## Fun commands
 @bot.command()
 async def sendmessage(ctx, *, arg): 
+    server = getServer(ctx)
 
     if(not hasPermission(ctx, "admin")):
         await ctx.send("Error: You do not have permission to use this command.")
         return
 
-    guild = discord.utils.get(bot.guilds, name="UManitoba Computer Science Lounge")
+    guild = discord.utils.get(bot.guilds, name=server.displayName)
 
     #assume message is in the format CHANNEL##MESSAGE
     rawMessage = arg.split("##")
