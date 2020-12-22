@@ -1,7 +1,7 @@
 import os
 import discord
 import pymongo
-import data_structures
+import utils
 from discord.ext import commands
 from dotenv import load_dotenv
 from pymongo import message
@@ -26,7 +26,7 @@ dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p
 #read in data from db
 def readInData(serverName):
     
-    server = data_structures.Server(serverName)
+    server = utils.Server(serverName)
 
     global dbClient
 
