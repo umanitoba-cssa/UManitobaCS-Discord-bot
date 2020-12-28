@@ -15,6 +15,7 @@ class Server:
 
         self.autoAssign = True
         self.greetMessage = ""
+        self.formLastChecked = 0
 
     def __str__(self):
         return self.displayName

@@ -2,10 +2,11 @@ import os
 import discord
 import pymongo
 import utils
+import time
 from discord.ext import commands
 from dotenv import load_dotenv
 from pymongo import message
-from pymongo.database import Database
+from pymongo.database import Database 
 
 # Check if we are running on heroku or locally 
 is_heroku = os.environ.get('IS_HEROKU', None)
@@ -100,6 +101,8 @@ def readInData(serverName):
 
     connectedServers.append(server)
 
+    return server
+
 
 #permission check function
 def hasPermission(ctx,level):
@@ -133,6 +136,16 @@ def getServer(ctx):
     else:
         return -1
 
+def checkForum(server):
+    #check only the UofM server for now, functionality for other servers will be added later. 
+
+    if(server.displayName == "UManitoba Computer Science Lounge"):
+        if(server.formLastChecked == 0 or time.time() - server.formLastChecked > 43200): 
+            #first check or 12 hours have passed since last check
+            server.formLastChecked = time.time()
+            #code to check for responses 
+
+
 #Start bot
 intent = discord.Intents(messages=True, members=True, guilds=True)
 bot = commands.Bot(command_prefix=PREFIX, intents = intent)
@@ -144,11 +157,13 @@ async def on_ready():
     #guild = discord.utils.get(bot.guilds, name=GUILD)
     #channel = discord.utils.get(guild.channels, name="general")
     
-    for server in bot.guilds:
-        if(server.name == "UManitoba Computer Science Lounge"):
-            readInData("csDiscord")
+    for guild in bot.guilds:
+        if(guild.name == "UManitoba Computer Science Lounge"):
+            server = readInData("csDiscord")
         else:
-            readInData(server.name.replace(" ","-"))
+            server = readInData(guild.name.replace(" ","-"))
+        checkForum(server)
+
 
 @bot.event
 async def on_member_join(member):
