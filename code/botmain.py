@@ -7,6 +7,9 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from pymongo import message
 from pymongo.database import Database 
+#Google api stuff
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 # Check if we are running on heroku or locally 
 is_heroku = os.environ.get('IS_HEROKU', None)
@@ -136,15 +139,26 @@ def getServer(ctx):
     else:
         return -1
 
-def checkForum(server):
+def checkForum(server, forced):
     #check only the UofM server for now, functionality for other servers will be added later. 
 
-    if(server.displayName == "UManitoba Computer Science Lounge"):
-        if(server.formLastChecked == 0 or time.time() - server.formLastChecked > 43200): 
+    if(server.displayName == "UManitoba Computer Science Lounge" or forced):
+        if(server.formLastChecked == 0 or time.time() - server.formLastChecked > 43200 or forced): 
             #first check or 12 hours have passed since last check
             server.formLastChecked = time.time()
-            #code to check for responses 
 
+            #open the responses spread-sheet
+            scope = ['https://spreadsheets.google.com/feeds',
+                     'https://www.googleapis.com/auth/drive']
+            creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
+            client = gspread.authorize(creds)
+
+            responsesSheet = client.open("Responses to discord signup").sheet1
+
+            names = responsesSheet.col_values(2)
+            lastIndex = len(responsesSheet.col_values(8))
+
+            return len(names) - lastIndex
 
 #Start bot
 intent = discord.Intents(messages=True, members=True, guilds=True)
@@ -162,7 +176,7 @@ async def on_ready():
             server = readInData("csDiscord")
         else:
             server = readInData(guild.name.replace(" ","-"))
-        checkForum(server)
+        checkForum(server,False)
 
 
 @bot.event
@@ -201,6 +215,18 @@ async def test(ctx, *args):
     #send the arguments of the command back to the user
     await ctx.send(' '.join(args))
 
+@bot.command()
+async def forceCheck(ctx, *args):
+    if(not hasPermission(ctx,"registered")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    responses = checkForum(getServer(ctx),True)
+
+    if responses > 0:
+        await ctx.send("There are `" + responses + "` new form responses.")
+    else:
+        await ctx.send("There are no new form responses.")
 
 @bot.command()
 async def iam(ctx, *args):
