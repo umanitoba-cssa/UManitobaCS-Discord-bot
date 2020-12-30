@@ -143,7 +143,7 @@ def checkForum(server, forced):
     #check only the UofM server for now, functionality for other servers will be added later. 
 
     if(server.displayName == "UManitoba Computer Science Lounge" or forced):
-        if(server.formLastChecked == 0 or time.time() - server.formLastChecked > 43200 or forced): 
+        if(server.formLastChecked == 0 or time.time() - server.formLastChecked > 43200*2 or forced): 
             #first check or 12 hours have passed since last check
             server.formLastChecked = time.time()
 
@@ -159,6 +159,7 @@ def checkForum(server, forced):
             lastIndex = len(responsesSheet.col_values(8))
 
             return len(names) - lastIndex
+    return 0
 
 #Start bot
 intent = discord.Intents(messages=True, members=True, guilds=True)
@@ -176,7 +177,7 @@ async def on_ready():
             server = readInData("csDiscord")
         else:
             server = readInData(guild.name.replace(" ","-"))
-        checkForum(server,False)
+        #checkForum(server,False)
 
 
 @bot.event
@@ -201,7 +202,7 @@ async def on_member_join(member):
         for j in server.invites:
             if i.url == j.url:
                 if i.uses > j.uses:
-                    await guildInvite.delete("Invite used on user " + member.mention)
+                    await i.delete("Invite used on user " + member.mention)
                     usedInvite = j
                     break
 
@@ -222,18 +223,34 @@ async def test(ctx, *args):
     #send the arguments of the command back to the user
     await ctx.send(' '.join(args))
 
+#just to forcibly check for forum responses
 @bot.command()
 async def forceCheck(ctx, *args):
-    if(not hasPermission(ctx,"registered")):
+
+    if(not hasPermission(ctx,"admin")):
         await ctx.send("Error: You do not have permission to use this command.")
         return
 
     responses = checkForum(getServer(ctx),True)
-
-    if responses > 0:
-        await ctx.send("There are `" + responses + "` new form responses.")
-    else:
+    if(responses <= 0):
         await ctx.send("There are no new form responses.")
+    else:
+        await ctx.send("There are `" + str(responses) + "` new responses.")
+
+@bot.command()
+async def handleResponses(ctx, *args):
+
+    if(not hasPermission(ctx,"admin")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    responses = checkForum(getServer(ctx),True)
+    if(responses <= 0):
+        await ctx.send("There are no new form responses.")
+    else:
+        await ctx.send("New responses found, generating emails/invites.")
+
+    
 
 @bot.command()
 async def iam(ctx, *args):

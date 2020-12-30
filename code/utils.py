@@ -39,3 +39,16 @@ class Invite:
         self.uses = uses
         self.server = server
         self.autoAssignRoles = roles
+
+
+class Email:
+    def __init__(self, recipient, name, inviteUrl):
+        self.recipient = recipient
+
+        self.subject = "UManitoba Computer Science Discord Invitation"
+        template = open("email/template_html.txt","r").read()
+        self.body = template.format(name = name, invite = inviteUrl)
+        template.close()
+
+    def __str__(self):
+        return "`TO:\n" + self.recipient + "\nSUBJECT:\n" + self.subject + "\nBODY:\n" + self.body + "`"
