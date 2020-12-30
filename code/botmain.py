@@ -195,16 +195,23 @@ async def on_member_join(member):
     if(server.greetMessage != ""):
         await channel.send(server.greetMessage.replace(f"%user%", member.mention))
 
+    usedInvite = utils.Invite
 
-    if(server.autoAssign and server.displayName == "UManitoba Computer Science Lounge"):
-        #just student for now, will change later
-        print("auto assigning roles for " + member.name)
-        autoRole = discord.utils.get(guild.roles, name="Student")
-        autoRole2 = discord.utils.get(guild.roles, name="announcements")
-        print("Roles: " + autoRole.name + ", " + autoRole2.name)
+    for i in guild.invites():
+        for j in server.invites:
+            if i.url == j.url:
+                if i.uses > j.uses:
+                    await guildInvite.delete("Invite used on user " + member.mention)
+                    usedInvite = j
+                    break
+
+    print("Assigning roles for " + member.name)
+    for role in usedInvite.autoAssignRoles:
+        autoRole = discord.utils.get(guild.roles, name=role)
+        print(autoRole.name + " assigned")
         await member.add_roles(autoRole)
-        await member.add_roles(autoRole2)
 
+    
 
 #### Commands ####
 

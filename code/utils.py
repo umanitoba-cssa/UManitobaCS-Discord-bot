@@ -12,6 +12,7 @@ class Server:
         self.announcementRoles = []
         self.yearRoles = []
         self.adminRoles = []
+        self.invites = []
 
         self.autoAssign = True
         self.greetMessage = ""
@@ -33,9 +34,8 @@ class Server:
         return returnList
 
 class Invite:
-    def __init__(self, url, server, roles, isEventRole):
+    def __init__(self, url, uses, server, roles):
         self.url = url
-        self.uses = 0
+        self.uses = uses
         self.server = server
         self.autoAssignRoles = roles
-        self.isEventRole = isEventRole
