@@ -24,6 +24,7 @@ else:
 PREFIX = '.'
 
 connectedServers = []
+formattedEmails = []
 
 dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
 
@@ -212,7 +213,14 @@ async def on_member_join(member):
         print(autoRole.name + " assigned")
         await member.add_roles(autoRole)
 
-    
+    #remove the old invite from the database/server memory
+    global dbClient
+    db = dbClient[server.displayName]
+    collection = db["invites"]
+    dict = vars(usedInvite)
+    collection.delete_one(dict)
+
+    server.invites.remove(usedInvite)    
 
 #### Commands ####
 
@@ -235,7 +243,7 @@ async def forceCheck(ctx, *args):
     if(responses <= 0):
         await ctx.send("There are no new form responses.")
     else:
-        await ctx.send("There are `" + str(responses) + "` new responses.")
+        await ctx.send("There are `" + str(responses) + "` new form responses.")
 
 @bot.command()
 async def handleResponses(ctx, *args):
@@ -248,9 +256,80 @@ async def handleResponses(ctx, *args):
     if(responses <= 0):
         await ctx.send("There are no new form responses.")
     else:
-        await ctx.send("New responses found, generating emails/invites.")
+        await ctx.send("Generating emails/invites...")
 
-    
+        #open the responses spread-sheet
+        scope = ['https://spreadsheets.google.com/feeds',
+                        'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
+        client = gspread.authorize(creds)
+        responsesSheet = client.open("Responses to discord signup").sheet1
+
+        emails = responsesSheet.col_values(3)
+        index = len(responsesSheet.col_values(8)) + 1 #the index of the first new response
+        flaggedResponses = []
+        validResponses = []
+
+        for i in range(responses):
+            currentIndex = index + i 
+            response = responsesSheet.row_values(currentIndex)
+            flagged = False
+            #check if this is a duplicate response or if it uses an invalid email
+            for j in range(currentIndex - 1):
+                if(response[2] == emails[j] or not response[2].endswith("@myumanitoba.ca")):
+                    flaggedResponses.append(response)
+                    flagged = True
+                    break
+            if(not flagged):
+                validResponses.append(response)
+
+        server = getServer(ctx)
+        guild = discord.utils.get(bot.guilds, name=server.displayName)
+        inviteChannel = discord.utils.get(guild.channels, name="introductions")
+        global dbClient
+        if(server.displayName == "UManitoba Computer Science Lounge"):
+            db = dbClient["csDiscord"]
+        else:
+            db = dbClient[server.displayName]
+        collection = db["invites"]
+        global formattedEmails
+
+        for response in validResponses:
+            #generate an invite link
+            newInvite = await inviteChannel.create_invite(max_uses=5, unique=True, reason="Created invite for user: " + response[4])
+            #generate a utils link to be saved server side
+            roles = response[5].split(", ")
+            roles.append(response[4])
+            invite = utils.Invite(newInvite.url,0,server.displayName,roles)
+            server.invites.append(invite)
+            #add it to the database
+            dict = vars(invite)
+            collection.insert_one(dict)
+
+            firstName = response[1].split(" ")[0].lower().capitalize()
+            formattedEmails.append(utils.Email(response[2],firstName,invite.url))
+
+        if(len(validResponses) > 0):
+            await ctx.send("Emails generated, use `.previewEmails` to preview.")
+            if(len(flaggedResponses) > 0):
+                await ctx.send("`" + str(len(flaggedResponses)) + "` invalid responses found.")
+        else:
+            await ctx.send("No valid responses found, no emails/invites were generated.")
+
+@bot.command()
+async def previewEmails(ctx, *args):
+    global formattedEmails
+
+    if(not hasPermission(ctx,"admin")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    if(len(formattedEmails) != 0):
+        await ctx.send("Printing out formatted emails:")
+        for email in formattedEmails:
+            await ctx.send(str(email))
+    else:
+        await ctx.send("No emails to preview.")
 
 @bot.command()
 async def iam(ctx, *args):
