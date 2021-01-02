@@ -101,6 +101,22 @@ def readInData(serverName):
 
     print("\nLoaded in the following greet message:\n" + server.greetMessage)
 
+    #invite codes
+    collection = db["invites"]
+    rawValues = collection.find({})
+
+    print("\nLoading in invites:")
+    for i in rawValues:
+        url = i["url"]
+        uses = i["uses"]
+        server = i["server"]
+        roles = i["autoAssignRoles"]
+
+        invite = utils.Invite(url,uses,server,roles)
+        server.invites.append(invite)
+        print(vars(invite))
+    
+
     print("\nFinished loading in data for " + server.displayName)
 
     connectedServers.append(server)
@@ -209,9 +225,29 @@ async def on_member_join(member):
 
     print("Assigning roles for " + member.name)
     for role in usedInvite.autoAssignRoles:
-        autoRole = discord.utils.get(guild.roles, name=role)
-        print(autoRole.name + " assigned")
-        await member.add_roles(autoRole)
+        roleName = 0
+
+        if(role == "CSSA Events"):
+            roleName = "cssa"
+        elif(role == "WICS Events"):
+            roleName = "wics"
+        elif(role == ".devclub Events"):
+            roleName = "devclub"
+        elif(role == "Movie nights"):
+            roleName = "movie-night"
+        elif(role == "Game Nights"):
+            roleName = "game-night"
+        elif(role == "Student"):
+            roleName = role
+        elif(role == "Alumni"):
+            roleName = role
+
+        if(roleName != 0):
+            autoRole = discord.utils.get(guild.roles, name=roleName)
+            print(autoRole.name + " assigned")
+            await member.add_roles(autoRole)
+        else:
+            print("ERROR: " + role + " not found in server")
 
     #remove the old invite from the database/server memory
     global dbClient
