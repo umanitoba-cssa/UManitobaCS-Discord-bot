@@ -248,6 +248,11 @@ async def on_member_join(member):
             await member.add_roles(autoRole)
         else:
             print("ERROR: " + role + " not found in server")
+    
+    #add the announcement role no matter what
+    autoRole = discord.utils.get(guild.roles, name="announcements")
+    print(autoRole.name + " assigned")
+    await member.add_roles(autoRole)
 
     #remove the old invite from the database/server memory
     global dbClient
