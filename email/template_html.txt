@@ -11,6 +11,6 @@
 	- Colton Dietterle, CSSA Executive
     </p>
     <p><small> Was this message sent to you by accident? Has the link expired? Send us a reply and we can sort things out!</small></p>
-<p><small> This message was sent with python, if there were any issues please send a reply!<br>Check out the code <a href="https://github.com/dietterc/invite-email-helper">here.</a></small></p>
+<p><small> This message was sent with python, if there were any issues please send a reply!<br>Check out the code <a href="https://github.com/dietterc/UManitobaCS-Discord-bot">here.</a></small></p>
   </body>
 </html>
