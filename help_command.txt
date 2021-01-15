@@ -1,0 +1,26 @@
+`.iam {colour}` 
+    - Sets the users color, `.iamn colour` to remove  
+`.iam {year}`   
+    - Gives the user the given year role, used to see year specific chats.   
+`.iamn {year}`  
+    - Removes a year role from user
+`.notify {category}` 
+    - Gives the user a role specific to an announcement type
+    - Can use `all` in place of a category to be added to all notification roles
+`.unnotify {category}`
+    - Removes an announcement role
+    - Can use `all` in place of a category to be removed from all notification roles
+`.form`
+    - Link to the sign-up form
+`.wics`
+    - General info about WICS 
+`.cssa`
+    - General info about CSSA 
+`.devclub`
+    - General info about .devclub  
+`.nothing`
+    - Does nothing
+`.help`
+    - :thinking:
+`.help admin`
+    - Info regarding admin commands.
