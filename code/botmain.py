@@ -10,12 +10,20 @@ from pymongo.database import Database
 #Google api stuff
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import asyncio
+
+
 
 # Check if we are running on heroku or locally 
 is_heroku = os.environ.get('IS_HEROKU', None)
 if is_heroku:
     TOKEN = os.environ.get('DISCORD_TOKEN', None)
     DB_PASS = os.environ.get('DB_PASS', None)
+    client_secret_txt = os.environ.get('CLIENT_SECRET', None)
+    client_secret = open("client_secret.json","w")
+    client_secret.write(client_secret_txt)
+    client_secret.close()
+
 else:
     load_dotenv()
     TOKEN = os.getenv('DISCORD_TOKEN')
@@ -109,10 +117,10 @@ def readInData(serverName):
     for i in rawValues:
         url = i["url"]
         uses = i["uses"]
-        server = i["server"]
+        inviteServer = i["server"]
         roles = i["autoAssignRoles"]
 
-        invite = utils.Invite(url,uses,server,roles)
+        invite = utils.Invite(url,uses,inviteServer,roles)
         server.invites.append(invite)
         print(vars(invite))
     
@@ -179,7 +187,7 @@ def checkForum(server, forced):
     return 0
 
 #Start bot
-intent = discord.Intents(messages=True, members=True, guilds=True)
+intent = discord.Intents(messages=True, members=True, guilds=True, reactions=True)
 bot = commands.Bot(command_prefix=PREFIX, intents = intent)
 
 
@@ -201,6 +209,7 @@ async def on_ready():
 async def on_member_join(member):
 
     guild = member.guild
+    guildInvites = await guild.invites()
 
     #guild must have a channel named "introductions"
     channel = discord.utils.get(guild.channels, name="introductions")
@@ -214,13 +223,15 @@ async def on_member_join(member):
         await channel.send(server.greetMessage.replace(f"%user%", member.mention))
 
     usedInvite = utils.Invite
-
-    for i in guild.invites():
+    inviteFound = False
+    
+    for i in guildInvites:
         for j in server.invites:
             if i.url == j.url:
                 if i.uses > j.uses:
-                    await i.delete("Invite used on user " + member.mention)
+                    await i.delete()
                     usedInvite = j
+                    inviteFound = True
                     break
 
     print("Assigning roles for " + member.name)
@@ -249,19 +260,40 @@ async def on_member_join(member):
         else:
             print("ERROR: " + role + " not found in server")
     
-    #add the announcement role no matter what
-    autoRole = discord.utils.get(guild.roles, name="announcements")
-    print(autoRole.name + " assigned")
-    await member.add_roles(autoRole)
+    #add the announcement role no matter what (if an invite was used)
+    if(inviteFound):
+        autoRole = discord.utils.get(guild.roles, name="announcements")
+        print(autoRole.name + " assigned")
+        await member.add_roles(autoRole)
 
-    #remove the old invite from the database/server memory
-    global dbClient
-    db = dbClient[server.displayName]
-    collection = db["invites"]
-    dict = vars(usedInvite)
-    collection.delete_one(dict)
+        #remove the old invite from the database/server memory
+        global dbClient
+        
+        if(server.displayName == "UManitoba Computer Science Lounge"):
+            db = dbClient["csDiscord"]
+        else:
+            db = dbClient[server.displayName]
+        collection = db["invites"]
+        dict = vars(usedInvite)
+        collection.delete_one(dict)
 
-    server.invites.remove(usedInvite)    
+        server.invites.remove(usedInvite)
+
+    else:
+        print("Invalid invite used for user" + member.mention)
+
+
+@bot.event
+async def on_reaction_add(reaction, user):
+    #print(user.display_name + " sent a reaction")
+    #check if there are formatted emails being displayed
+    for email in formattedEmails:
+        if email.previewMessage == reaction.message and not user.bot:
+            if str(reaction.emoji) == "✔":
+                await email.previewMessage.edit(content="Invite email sent. (but not really) " + email.recipient, delete_after=15.0)
+            elif str(reaction.emoji) == "❌":
+                await email.previewMessage.edit(content="Invite email will not be sent. The response was flagged in the spreadsheet. " + email.recipient, delete_after=15.0)
+ 
 
 #### Commands ####
 
@@ -272,9 +304,10 @@ async def test(ctx, *args):
     #send the arguments of the command back to the user
     await ctx.send(' '.join(args))
 
+
 #just to forcibly check for forum responses
 @bot.command()
-async def forceCheck(ctx, *args):
+async def forcecheck(ctx, *args):
 
     if(not hasPermission(ctx,"admin")):
         await ctx.send("Error: You do not have permission to use this command.")
@@ -287,7 +320,7 @@ async def forceCheck(ctx, *args):
         await ctx.send("There are `" + str(responses) + "` new form responses.")
 
 @bot.command()
-async def handleResponses(ctx, *args):
+async def handleresponses(ctx, *args):
 
     if(not hasPermission(ctx,"admin")):
         await ctx.send("Error: You do not have permission to use this command.")
@@ -308,6 +341,7 @@ async def handleResponses(ctx, *args):
 
         emails = responsesSheet.col_values(3)
         index = len(responsesSheet.col_values(8)) + 1 #the index of the first new response
+
         flaggedResponses = []
         validResponses = []
 
@@ -334,13 +368,14 @@ async def handleResponses(ctx, *args):
             db = dbClient[server.displayName]
         collection = db["invites"]
         global formattedEmails
+        formattedEmails.clear()
 
         for response in validResponses:
             #generate an invite link
             newInvite = await inviteChannel.create_invite(max_uses=5, unique=True, reason="Created invite for user: " + response[4])
             #generate a utils link to be saved server side
             roles = response[5].split(", ")
-            roles.append(response[4])
+            roles.append(response[3])
             invite = utils.Invite(newInvite.url,0,server.displayName,roles)
             server.invites.append(invite)
             #add it to the database
@@ -368,7 +403,14 @@ async def previewEmails(ctx, *args):
     if(len(formattedEmails) != 0):
         await ctx.send("Printing out formatted emails:")
         for email in formattedEmails:
-            await ctx.send(str(email))
+            email.previewMessage = await ctx.send(str(email))
+            email.previewer = ctx.message.author
+
+            checkmark = "✔"
+            crossmark = "❌"
+            await email.previewMessage.add_reaction(checkmark)
+            await email.previewMessage.add_reaction(crossmark)
+
     else:
         await ctx.send("No emails to preview.")
 
@@ -682,6 +724,27 @@ async def autoassignrole(ctx,*args):
     elif(not server.autoAssign):
         await ctx.send("Auto assignment of roles disabled.")
 
+bot.remove_command("help")
+@bot.command()
+async def help(ctx,*args):
+
+    if(len(args) != 0):
+        if(args[0] == "admin"):
+            if(hasPermission(ctx, "admin")):
+                await ctx.send("Placeholder for admin help commands")
+            else:
+                await ctx.send("Error: You do not have permission to use this command.")
+        else:
+            await ctx.send("Error: Command must be `.help` or `.help admin`")
+    else:
+        file = open("help_command.txt","r")
+        content = file.read()
+        file.close()
+
+        embed = discord.Embed(color=0x00c3e6)
+        embed.add_field(name="Available commands", value=content, inline=False)
+        await ctx.send(embed=embed)
+
 ## Fun commands
 @bot.command()
 async def sendmessage(ctx, *, arg): 
@@ -709,62 +772,10 @@ async def sendmessage_error(ctx, error):
             return
         await ctx.send("Error: No message to send.")
 
-#for future me
-'''
-#should play a random yelling sound effect in voice chat
-ytdl_format_options = {
-    'format': 'bestaudio/best',
-    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
-    'restrictfilenames': True,
-    'noplaylist': True,
-    'nocheckcertificate': True,
-    'ignoreerrors': False,
-    'logtostderr': False,
-    'quiet': True,
-    'no_warnings': True,
-    'default_search': 'auto',
-    'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
-}
-
-ffmpeg_options = {
-    'options': '-vn'
-}
-
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
-class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.5):
-        super().__init__(source, volume)
-
-        self.data = data
-
-        self.title = data.get('title')
-        self.url = data.get('url')
-
-    @classmethod
-    async def from_url(cls, url, *, loop=None, stream=False):
-        loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
-
-        if 'entries' in data:
-            # take first item from a playlist
-            data = data['entries'][0]
-
-        filename = data['url'] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
-
 @bot.command()
-async def exams(ctx,*args):
-    guild = discord.utils.get(bot.guilds, name="UManitoba Computer Science Lounge")
-    voice_channel = discord.utils.get(guild.voice_channels, name="scream-into-the-void")
+async def nothing(ctx, *, arg): 
+    pass
 
-    links = ['https://youtu.be/9M3NqnPhlSQ','https://youtu.be/SiMsRJpd-VA','https://youtu.be/-_ZNxsiIqgA']
-    url = links[random.randint(0,2)]
 
-    vc = await voice_channel.connect()
-
-    player = await YTDLSource.from_url(url, loop=bot.loop, stream=True)
-    vc.play(player, after=await vc.disconnect())
-
-'''
 bot.run(TOKEN)
 

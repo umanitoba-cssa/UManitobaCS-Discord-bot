@@ -39,10 +39,11 @@ Commands with a '*' have not been implemented yet
 
 - `.notify {category}`
     - gives the user a role specific to an announcement type
-    - will be automatic once forum integration is added
+    - can use `all` in place of a category to be added to all notification roles
 
 - `.unnotify {category}`
     - removes an announcement role from a user
+    - can use `all` in place of a category to be removed from all notification roles
 
 #### All users 
 - *`.form`
@@ -56,6 +57,9 @@ Commands with a '*' have not been implemented yet
 
 - *`.devclub`
     - respond with info about devclub  
+
+- *`.help`
+    - help command
 
 The content for the three above commands may need to be added to the bot manually (for formatting reasons)
  
@@ -75,6 +79,12 @@ The content for the three above commands may need to be added to the bot manuall
 - `.autoassignrole`
     - temporary command for toggling the auto assignment of the student role.
     - will be removed once this is automatically done from the forum responses
+
+- `.forceCheck`
+    - forcibly checks the sign up form for responses. 
+
+- `.handleResponses`
+    - if there are new forum responses, generate emails, preview them, then wait for input to send them.
 
 
 ### Event Commands:  
