@@ -47,6 +47,7 @@ class Email:
         self.subject = "UManitoba Computer Science Discord Invitation"
         template = open("email/template_html.txt","r").read()
         self.body = template.format(name = name, invite = inviteUrl)
+        self.inviteUrl = inviteUrl
         self.previewMessage = ""
         self.previewer = ""
 

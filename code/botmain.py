@@ -299,13 +299,13 @@ async def on_reaction_add(reaction, user):
                 #insert code to send emails here
 
                 #update spreadsheet to say sent
-                sentEmails.append(email.recipient)
+                sentEmails.append(email)
 
             elif str(reaction.emoji) == "❌":
                 await email.previewMessage.edit(content="Invite email will not be sent. The response was flagged in the spreadsheet. " + email.recipient, delete_after=15.0)
 
                 #add to flagged emails 
-                flaggedEmails.append(email.recipient)
+                flaggedEmails.append(email)
 
     #code for updating spreadsheet here
     if(len(flaggedEmails) > 0 or len(sentEmails) > 0):
@@ -320,12 +320,13 @@ async def on_reaction_add(reaction, user):
         emails = responsesSheet.col_values(3)
         sheet_index = len(responsesSheet.col_values(8)) + 1 #the index of the first new response (starts at 1)
 
-        for recipient in sentEmails:
-            index = emails.index(recipient,sheet_index - 1) + 1
+        for email in sentEmails:
+            index = emails.index(email.recipient,sheet_index - 1) + 1
             responsesSheet.update_cell(index,8,"fake sent")
+            responsesSheet.update_cell(index,7,email.inviteUrl)
         
-        for recipient in flaggedEmails:
-            index = emails.index(recipient,sheet_index - 1) + 1
+        for email in flaggedEmails:
+            index = emails.index(email.recipient,sheet_index - 1) + 1
             responsesSheet.format("A" + index, {
                 "backgroundColor": {
                 "red": 227.0,
