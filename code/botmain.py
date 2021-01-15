@@ -327,12 +327,8 @@ async def on_reaction_add(reaction, user):
         
         for email in flaggedEmails:
             index = emails.index(email.recipient,sheet_index - 1) + 1
-            responsesSheet.format("A" + index, {
-                "backgroundColor": {
-                "red": 227.0,
-                "green": 148.0,
-                "blue": 148.0
-            }})
+            responsesSheet.update_cell(index,8,"FLAGGED")
+            responsesSheet.update_cell(index,7,email.inviteUrl)
 
 #### Commands ####
 
@@ -424,14 +420,9 @@ async def handleresponses(ctx, *args):
             firstName = response[1].split(" ")[0].lower().capitalize()
             formattedEmails.append(utils.Email(response[2],firstName,invite.url))
 
-        for recipient in flaggedResponses:
-            sheet_index = emails.index(recipient,index - 1) + 1
-            responsesSheet.format("A" + index, {
-                "backgroundColor": {
-                "red": 227.0,
-                "green": 148.0,
-                "blue": 148.0
-            }})
+        for response in flaggedResponses:
+            sheet_index = emails.index(response[2],index - 1) + 1
+            responsesSheet.update_cell(sheet_index,8,"FLAGGED")
 
         if(len(validResponses) > 0):
             await ctx.send("Emails generated, use `.previewEmails` to preview.")
