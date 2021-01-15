@@ -286,14 +286,52 @@ async def on_member_join(member):
 @bot.event
 async def on_reaction_add(reaction, user):
     #print(user.display_name + " sent a reaction")
+
+    sentEmails = []
+    flaggedEmails = []
+
     #check if there are formatted emails being displayed
     for email in formattedEmails:
-        if email.previewMessage == reaction.message and not user.bot:
+        if  not user.bot and email.previewMessage == reaction.message:
             if str(reaction.emoji) == "✔":
-                await email.previewMessage.edit(content="Invite email sent. (but not really) " + email.recipient, delete_after=15.0)
+                await email.previewMessage.edit(content="Invite email sent to " + email.recipient, delete_after=15.0)
+
+                #insert code to send emails here
+
+                #update spreadsheet to say sent
+                sentEmails.append(email.recipient)
+
             elif str(reaction.emoji) == "❌":
                 await email.previewMessage.edit(content="Invite email will not be sent. The response was flagged in the spreadsheet. " + email.recipient, delete_after=15.0)
- 
+
+                #add to flagged emails 
+                flaggedEmails.append(email.recipient)
+
+    #code for updating spreadsheet here
+    if(len(flaggedEmails) > 0 or len(sentEmails) > 0):
+        
+        #open the responses spread-sheet
+        scope = ['https://spreadsheets.google.com/feeds',
+                        'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
+        client = gspread.authorize(creds)
+        responsesSheet = client.open("Responses to discord signup").sheet1
+
+        emails = responsesSheet.col_values(3)
+        sheet_index = len(responsesSheet.col_values(8)) + 1 #the index of the first new response (starts at 1)
+
+        for recipient in sentEmails:
+            index = emails.index(recipient,sheet_index - 1) + 1
+            responsesSheet.update_cell(index,8,"fake sent")
+        
+        for recipient in flaggedEmails:
+            index = emails.index(recipient,sheet_index - 1) + 1
+            responsesSheet.format("A" + index, {
+                "backgroundColor": {
+                "red": 227.0,
+                "green": 148.0,
+                "blue": 148.0
+            }})
 
 #### Commands ####
 
@@ -384,6 +422,15 @@ async def handleresponses(ctx, *args):
 
             firstName = response[1].split(" ")[0].lower().capitalize()
             formattedEmails.append(utils.Email(response[2],firstName,invite.url))
+
+        for recipient in flaggedResponses:
+            sheet_index = emails.index(recipient,index - 1) + 1
+            responsesSheet.format("A" + index, {
+                "backgroundColor": {
+                "red": 227.0,
+                "green": 148.0,
+                "blue": 148.0
+            }})
 
         if(len(validResponses) > 0):
             await ctx.send("Emails generated, use `.previewEmails` to preview.")
@@ -744,6 +791,18 @@ async def help(ctx,*args):
         embed = discord.Embed(color=0x00c3e6)
         embed.add_field(name="Available commands", value=content, inline=False)
         await ctx.send(embed=embed)
+
+@bot.command()
+async def cssa(ctx, *, arg): 
+    pass
+
+@bot.command()
+async def wics(ctx, *, arg): 
+    pass
+
+@bot.command()
+async def devclub(ctx, *, arg): 
+    pass
 
 ## Fun commands
 @bot.command()
