@@ -838,7 +838,7 @@ async def devclub(ctx, *, arg):
     file.close()
 
 @bot.command()
-async def devclub(ctx, *, arg): 
+async def form(ctx, *, arg): 
     await ctx.send("https://forms.gle/HSinscg1aStKjQR4A")
 
 ## Fun commands
