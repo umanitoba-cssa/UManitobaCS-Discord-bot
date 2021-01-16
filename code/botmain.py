@@ -10,7 +10,10 @@ from pymongo.database import Database
 #Google api stuff
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-import asyncio
+#Email stuff
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 
 
@@ -19,6 +22,7 @@ is_heroku = os.environ.get('IS_HEROKU', None)
 if is_heroku:
     TOKEN = os.environ.get('DISCORD_TOKEN', None)
     DB_PASS = os.environ.get('DB_PASS', None)
+    GMAIL_PASS = os.environ.get('GMAIL_PASS', None)
     client_secret_txt = os.environ.get('CLIENT_SECRET', None)
     client_secret = open("client_secret.json","w")
     client_secret.write(client_secret_txt)
@@ -28,6 +32,7 @@ else:
     load_dotenv()
     TOKEN = os.getenv('DISCORD_TOKEN')
     DB_PASS = os.getenv('DB_PASS')
+    GMAIL_PASS = os.getenv('GMAIL_PASS', None)
 
 PREFIX = '.'
 
@@ -296,7 +301,37 @@ async def on_reaction_add(reaction, user):
             if str(reaction.emoji) == "✔":
                 await email.previewMessage.edit(content="Invite email sent to " + email.recipient, delete_after=15.0)
 
-                #insert code to send emails here
+                #send emails
+                print("Sending email to " + email.recipient)
+
+                sender_email = 'cssadiscordinvites@gmail.com'
+
+                #Myself for testing
+                receiver_email = "dietterc@myumanitoba.ca" #email.recipient
+
+                message = MIMEMultipart("alternative")
+                message["Subject"] = email.subject
+                message["From"] = "UofM CS Discord Form <" + sender_email + ">"
+                message["To"] = receiver_email
+
+                text = open("templates/template_plain.txt","r").read().format(d_invite = email.inviteUrl)
+
+                html = email.body
+
+                message.attach(MIMEText(text, "plain"))
+                message.attach(MIMEText(html, "html"))
+
+                try:
+                    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+                    server.ehlo()
+                    server.login(sender_email, GMAIL_PASS)
+                    server.sendmail(sender_email, receiver_email, message.as_string())
+                    server.close()
+
+                    print("Email sent!\n")
+
+                except:
+                    print("Something went wrong... Email not sent.\n")
 
                 #update spreadsheet to say sent
                 sentEmails.append(email)
