@@ -307,7 +307,7 @@ async def on_reaction_add(reaction, user):
                 sender_email = 'cssadiscordinvites@gmail.com'
 
                 #Myself for testing
-                receiver_email = "dietterc@myumanitoba.ca" #email.recipient
+                receiver_email = email.recipient
 
                 message = MIMEMultipart("alternative")
                 message["Subject"] = email.subject
@@ -328,10 +328,10 @@ async def on_reaction_add(reaction, user):
                     server.sendmail(sender_email, receiver_email, message.as_string())
                     server.close()
 
-                    print("Email sent!\n")
+                    print("Email sent!")
 
                 except:
-                    print("Something went wrong... Email not sent.\n")
+                    print("Something went wrong... Email not sent.")
 
                 #update spreadsheet to say sent
                 sentEmails.append(email)
@@ -364,6 +364,10 @@ async def on_reaction_add(reaction, user):
             index = emails.index(email.recipient,sheet_index - 1) + 1
             responsesSheet.update_cell(index,8,"FLAGGED")
             responsesSheet.update_cell(index,7,email.inviteUrl)
+
+        flaggedEmails = []
+        sentEmails = []
+        formattedEmails = []
 
 #### Commands ####
 
