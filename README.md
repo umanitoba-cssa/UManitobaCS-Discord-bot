@@ -2,14 +2,7 @@
 A custom bot for the University of Manitoba's Computer Science Discord server. 
 
 
-## Ideas/What I want this bot to do.   
-- manage invites 
-- Check forum responses and send out invites automatically  
-    - flag invalid responses, non-UM email, already filled out the form, etc 
-    - use code from the existing script 
-    - a way to manage flagged responses within the discord 
-- auto assign roles to people who joined with certain invites
-    - assign student/alumni roles, announcement roles, and year roles based on the forum response 
+## todo.   
 - prep event channels through a command 
 - generate special invite for events through a command (not a temp invite)
     - Gives whoever joins a 'event' role that has limited access. 
@@ -46,19 +39,19 @@ Commands with a '*' have not been implemented yet
     - can use `all` in place of a category to be removed from all notification roles
 
 #### All users 
-- *`.form`
+- `.form`
     - respond with the link to the sign-up form
 
-- *`.wics`
+- `.wics`
     - respond with info about wics 
 
-- *`.cssa`
+- `.cssa`
     - respond with info about cssa 
 
-- *`.devclub`
+- `.devclub`
     - respond with info about devclub  
 
-- *`.help`
+- `.help`
     - help command
 
 The content for the three above commands may need to be added to the bot manually (for formatting reasons)
