@@ -291,6 +291,7 @@ async def on_member_join(member):
 @bot.event
 async def on_reaction_add(reaction, user):
     #print(user.display_name + " sent a reaction")
+    global formattedEmails
 
     sentEmails = []
     flaggedEmails = []
@@ -299,7 +300,7 @@ async def on_reaction_add(reaction, user):
     for email in formattedEmails:
         if  not user.bot and email.previewMessage == reaction.message:
             if str(reaction.emoji) == "✔":
-                await email.previewMessage.edit(content="Invite email sent to " + email.recipient, delete_after=15.0)
+                await email.previewMessage.edit(content="Invite email sent to " + email.recipient)
 
                 #send emails
                 print("Sending email to " + email.recipient)
@@ -337,7 +338,7 @@ async def on_reaction_add(reaction, user):
                 sentEmails.append(email)
 
             elif str(reaction.emoji) == "❌":
-                await email.previewMessage.edit(content="Invite email will not be sent. The response was flagged in the spreadsheet. " + email.recipient, delete_after=15.0)
+                await email.previewMessage.edit(content="Invite email will not be sent. The response was flagged in the spreadsheet. " + email.recipient)
 
                 #add to flagged emails 
                 flaggedEmails.append(email)
@@ -357,7 +358,7 @@ async def on_reaction_add(reaction, user):
 
         for email in sentEmails:
             index = emails.index(email.recipient,sheet_index - 1) + 1
-            responsesSheet.update_cell(index,8,"fake sent")
+            responsesSheet.update_cell(index,8,"sent")
             responsesSheet.update_cell(index,7,email.inviteUrl)
         
         for email in flaggedEmails:
