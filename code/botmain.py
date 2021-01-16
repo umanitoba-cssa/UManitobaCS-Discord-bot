@@ -786,15 +786,25 @@ async def help(ctx,*args):
 
 @bot.command()
 async def cssa(ctx, *, arg): 
-    pass
+    file = open("templates/cssa.txt","r")
+    await ctx.send(file.read())
+    file.close()
 
 @bot.command()
 async def wics(ctx, *, arg): 
-    pass
+    file = open("templates/wics.txt","r")
+    await ctx.send(file.read())
+    file.close()
 
 @bot.command()
 async def devclub(ctx, *, arg): 
-    pass
+    file = open("templates/devclub.txt","r")
+    await ctx.send(file.read())
+    file.close()
+
+@bot.command()
+async def devclub(ctx, *, arg): 
+    await ctx.send("https://forms.gle/HSinscg1aStKjQR4A")
 
 ## Fun commands
 @bot.command()
