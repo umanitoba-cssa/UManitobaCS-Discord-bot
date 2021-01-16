@@ -301,6 +301,7 @@ async def on_reaction_add(reaction, user):
         if  not user.bot and email.previewMessage == reaction.message:
             if str(reaction.emoji) == "✔":
                 await email.previewMessage.edit(content="Invite email sent to " + email.recipient)
+                await email.previewMessage.clear_reactions()
 
                 #send emails
                 print("Sending email to " + email.recipient)
