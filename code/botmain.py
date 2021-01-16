@@ -817,7 +817,7 @@ async def help(ctx,*args):
         else:
             await ctx.send("Error: Command must be `.help` or `.help admin`")
     else:
-        file = open("help_command.txt","r")
+        file = open("templates/help_command.txt","r")
         content = file.read()
         file.close()
 
@@ -826,25 +826,25 @@ async def help(ctx,*args):
         await ctx.send(embed=embed)
 
 @bot.command()
-async def cssa(ctx, *, arg): 
+async def cssa(ctx,*args):
     file = open("templates/cssa.txt","r")
     await ctx.send(file.read())
     file.close()
 
 @bot.command()
-async def wics(ctx, *, arg): 
+async def wics(ctx,*args): 
     file = open("templates/wics.txt","r")
     await ctx.send(file.read())
     file.close()
 
 @bot.command()
-async def devclub(ctx, *, arg): 
+async def devclub(ctx,*args):
     file = open("templates/devclub.txt","r")
     await ctx.send(file.read())
     file.close()
 
 @bot.command()
-async def form(ctx, *, arg): 
+async def form(ctx,*args):
     await ctx.send("https://forms.gle/HSinscg1aStKjQR4A")
 
 ## Fun commands
