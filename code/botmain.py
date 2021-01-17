@@ -424,7 +424,7 @@ async def handleresponses(ctx, *args):
         for i in range(responses):
             currentIndex = index + i 
             response = responsesSheet.row_values(currentIndex)
-            if(len(response) == 5)
+            if(len(response) == 5):
                 response.append("")
             flagged = False
             #check if this is a duplicate response or if it uses an invalid email
