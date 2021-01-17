@@ -251,7 +251,7 @@ async def on_member_join(member):
             roleName = "devclub"
         elif(role == "Movie nights"):
             roleName = "movie-night"
-        elif(role == "Game Nights"):
+        elif(role == "Game nights"):
             roleName = "game-night"
         elif(role == "Student"):
             roleName = role
@@ -424,6 +424,8 @@ async def handleresponses(ctx, *args):
         for i in range(responses):
             currentIndex = index + i 
             response = responsesSheet.row_values(currentIndex)
+            if(len(response) == 5)
+                response.append("")
             flagged = False
             #check if this is a duplicate response or if it uses an invalid email
             for j in range(currentIndex - 1):
