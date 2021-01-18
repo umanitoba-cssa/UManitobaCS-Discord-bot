@@ -337,12 +337,14 @@ async def on_reaction_add(reaction, user):
 
                 #update spreadsheet to say sent
                 sentEmails.append(email)
+                formattedEmails.remove(email)
 
             elif str(reaction.emoji) == "❌":
                 await email.previewMessage.edit(content="Invite email will not be sent. The response was flagged in the spreadsheet. " + email.recipient)
 
                 #add to flagged emails 
                 flaggedEmails.append(email)
+                formattedEmails.remove(email)
 
     #code for updating spreadsheet here
     if(len(flaggedEmails) > 0 or len(sentEmails) > 0):
@@ -369,7 +371,6 @@ async def on_reaction_add(reaction, user):
 
         flaggedEmails = []
         sentEmails = []
-        formattedEmails = []
 
 #### Commands ####
 
