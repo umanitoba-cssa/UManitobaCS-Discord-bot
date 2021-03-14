@@ -1,1 +1,4 @@
-todo
+The CSSA (Computer Science Students Association) is the departmental group that represents Computer science students. 
+
+Our primary method of communication is this server, but you can join our slack here:
+umanitobacssa.slack.com
