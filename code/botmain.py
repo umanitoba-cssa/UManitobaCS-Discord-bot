@@ -600,7 +600,10 @@ async def iamn(ctx, *args):
 async def colour(ctx, *args):
     server = getServer(ctx)
     global dbClient
-    db = dbClient[server.displayName]
+    if(server.displayName == "UManitoba Computer Science Lounge"):
+        db = dbClient["csDiscord"]
+    else:
+        db = dbClient[server.displayName]
     
     if(not hasPermission(ctx,"admin")):
         await ctx.send("Error: You do not have permission to use this command.")
