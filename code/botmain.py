@@ -299,7 +299,7 @@ async def on_voice_state_update(member, before, after):
             await member.add_roles(role)
             print("giving voting role to " + member.name)
 
-    elif(before.channel != None and before.channel.name == "CSSA General Meeting" and after.channel.name != "CSSA General Meeting":
+    elif(before.channel != None and before.channel.name == "CSSA General Meeting"):
         #they have left
         if role in member.roles:
             await member.remove_roles(role)
