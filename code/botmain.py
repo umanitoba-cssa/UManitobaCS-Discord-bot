@@ -303,7 +303,18 @@ async def on_voice_state_update(member, before, after):
         await member.remove_roles(role)
         print("removing voting role from " + member.name)
 
-    pass
+
+@bot.event
+async def on_message(message):
+
+    if(message.channel.name == "voting"):
+        print("Adding voting reactions")
+        upvote = "👍"
+        downvote = "👎"
+        await message.add_reaction(upvote)
+        await message.add_reaction(downvote)
+
+
 
 @bot.event
 async def on_reaction_add(reaction, user):
