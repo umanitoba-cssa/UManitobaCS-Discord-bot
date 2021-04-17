@@ -293,12 +293,12 @@ async def on_voice_state_update(member, before, after):
 
     role = discord.utils.get(member.guild.roles, name="cssa-voting")
 
-    if(after.channel.name == "CSSA General Meeting"):
+    if(after.channel != None and after.channel.name == "CSSA General Meeting"):
         #they have joined
         await member.add_roles(role)
         print("giving voting role to " + member.name)
 
-    elif(before.channel.name == "CSSA General Meeting"):
+    elif(before.channel != None and before.channel.name == "CSSA General Meeting"):
         #they have left
         await member.remove_roles(role)
         print("removing voting role from " + member.name)
