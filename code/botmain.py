@@ -312,17 +312,6 @@ async def on_voice_state_update(member, before, after):
             print("removing voting role from " + member.name)
 
 
-@bot.event
-async def on_message(message):
-
-    if(message.channel.name == "voting"):
-        print("Adding voting reactions")
-        upvote = "👍"
-        downvote = "👎"
-        await message.add_reaction(upvote)
-        await message.add_reaction(downvote)
-
-
 
 @bot.event
 async def on_reaction_add(reaction, user):
@@ -416,14 +405,6 @@ async def on_reaction_add(reaction, user):
 async def test(ctx, *args):
     #send the arguments of the command back to the user
     await ctx.send(' '.join(args))
-
-
-@bot.command()
-@commands.has_role('admin')
-async def meetingList(ctx, *args):
-    global nameList
-    #send the arguments of the command back to the user
-    await ctx.send(' '.join(nameList))
 
 
 #just to forcibly check for forum responses
