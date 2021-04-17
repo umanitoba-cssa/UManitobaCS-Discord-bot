@@ -39,6 +39,10 @@ PREFIX = '.'
 connectedServers = []
 formattedEmails = []
 
+#TEMP
+global nameList
+nameList = []
+
 dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
 
 #read in data from db
@@ -290,6 +294,7 @@ async def on_member_join(member):
 
 @bot.event
 async def on_voice_state_update(member, before, after):
+    global nameList
 
     role = discord.utils.get(member.guild.roles, name="cssa-voting")
 
@@ -298,6 +303,7 @@ async def on_voice_state_update(member, before, after):
         if not role in member.roles:
             await member.add_roles(role)
             print("giving voting role to " + member.name)
+            nameList.append(member.name)
 
     elif(before.channel != None and before.channel.name == "CSSA General Meeting"):
         #they have left
@@ -410,6 +416,14 @@ async def on_reaction_add(reaction, user):
 async def test(ctx, *args):
     #send the arguments of the command back to the user
     await ctx.send(' '.join(args))
+
+
+@bot.command()
+@commands.has_role('admin')
+async def meetingList(ctx, *args):
+    global nameList
+    #send the arguments of the command back to the user
+    await ctx.send(' '.join(nameList))
 
 
 #just to forcibly check for forum responses
