@@ -192,7 +192,7 @@ def checkForum(server, forced):
     return 0
 
 #Start bot
-intent = discord.Intents(messages=True, members=True, guilds=True, reactions=True)
+intent = discord.Intents(messages=True, members=True, guilds=True, reactions=True, voice_states=True)
 bot = commands.Bot(command_prefix=PREFIX, intents = intent)
 
 
@@ -287,6 +287,23 @@ async def on_member_join(member):
     else:
         print("Invalid invite used for user" + member.mention)
 
+
+@bot.event
+async def on_voice_state_update(member, before, after):
+
+    role = discord.utils.get(member.guild.roles, name="cssa-voting")
+
+    if(after.channel.name == "CSSA General Meeting"):
+        #they have joined
+        await member.add_roles(role)
+        print("giving voting role to " + member.name)
+
+    elif(before.channel.name == "CSSA General Meeting"):
+        #they have left
+        await member.remove_roles(role)
+        print("removing voting role from " + member.name)
+
+    pass
 
 @bot.event
 async def on_reaction_add(reaction, user):
