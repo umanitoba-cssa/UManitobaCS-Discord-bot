@@ -1,3 +1,4 @@
+from code.utils import UserHistory
 import os
 import discord
 import pymongo
@@ -39,9 +40,6 @@ PREFIX = '.'
 connectedServers = []
 formattedEmails = []
 
-#TEMP
-global nameList
-nameList = []
 
 dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
 
@@ -292,6 +290,7 @@ async def on_member_join(member):
         print("Invalid invite used for user" + member.mention)
 
 
+'''
 @bot.event
 async def on_voice_state_update(member, before, after):
     global nameList
@@ -310,7 +309,7 @@ async def on_voice_state_update(member, before, after):
         if role in member.roles:
             await member.remove_roles(role)
             print("removing voting role from " + member.name)
-
+'''
 
 
 @bot.event
@@ -407,7 +406,7 @@ async def test(ctx, *args):
     await ctx.send(' '.join(args))
 
 
-#just to forcibly check for forum responses
+#forcibly check for forum responses
 @bot.command()
 async def forcecheck(ctx, *args):
 
@@ -908,6 +907,42 @@ async def sendmessage_error(ctx, error):
 @bot.command()
 async def nothing(ctx, *, arg): 
     pass
+
+#load all users into the database.
+#Should really only be used once
+@bot.command()
+async def uploadusers(ctx, *args):
+
+    user = ctx.message.author
+    server = getServer(ctx)
+
+    global dbClient
+    if(server.displayName == "UManitoba Computer Science Lounge"):
+        db = dbClient["csDiscord"]
+    else:
+        db = dbClient[server.displayName]
+
+    collection = db["users"]
+
+
+    if(not user.name == "dietterc#8665"):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    await ctx.send("Beginning upload...")
+
+    dbList = []
+    for member in server.members:
+
+        if(member.name == "dietterc#8665"):
+            user = utils.UserHistory(member.id,member.name,member.nick)
+
+            
+            dict = vars(user)
+            dbList.append(dict)
+        
+    #add all to the database
+    collection.insert_many(dbList)
 
 
 bot.run(TOKEN)
