@@ -53,3 +53,37 @@ class Email:
 
     def __str__(self):
         return "```html\nTO:\n" + self.recipient + "\nSUBJECT:\n" + self.subject + "\nBODY:\n" + self.body + "```"
+
+class UserHistory:
+    def __init__(self, id, username, nickname):
+        self.id = id
+        
+        if(type(username) != list ):
+            self.usernames = []
+
+            self.usernames.append(username)
+        else:
+            self.usernames = username
+
+        if(type(nickname) != list ):
+            self.nicknames = []
+
+            if(nickname != None):
+                self.nicknames.append(nickname)
+        else:
+            self.nicknames = []
+            for nick in nickname:
+                if nick != None:
+                    self.nicknames.append(nick)
+        
+
+
+    def __str__(self):
+        string = "```\nID: "
+        string += str(self.id) 
+        string += "\nUsernames:\n"
+        string += ", ".join(self.usernames)
+        string += "\nNicknames:\n"
+        string += ", ".join(self.nicknames)
+        string += "```"
+        return string

@@ -14,6 +14,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from difflib import SequenceMatcher
 
 
 
@@ -39,9 +40,10 @@ PREFIX = '.'
 connectedServers = []
 formattedEmails = []
 
-#TEMP
-global nameList
-nameList = []
+#Should move into server object at some point
+global userHistoryList
+userHistoryList = []
+
 
 dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
 
@@ -54,6 +56,7 @@ def readInData(serverName):
         server = utils.Server(serverName)
 
     global dbClient
+    global userHistoryList
 
     db = dbClient[serverName]
 
@@ -133,6 +136,18 @@ def readInData(serverName):
         server.invites.append(invite)
         print(vars(invite))
     
+
+    collection = db["users"]
+    rawValues = collection.find({})
+
+    for i in rawValues:
+        id = i["id"]
+        usernames = i["usernames"]
+        nicknames = i["nicknames"]
+
+        user = utils.UserHistory(id,usernames,nicknames)
+        userHistoryList.append(user)
+
 
     print("\nFinished loading in data for " + server.displayName)
 
@@ -291,26 +306,88 @@ async def on_member_join(member):
     else:
         print("Invalid invite used for user" + member.mention)
 
+    global userHistoryList
+
+    newUser = utils.UserHistory(member.id,member.name,member.nick)
+    userHistoryList.append(newUser)
+    
+    if(server.displayName == "UManitoba Computer Science Lounge"):
+        db = dbClient["csDiscord"]
+    else:
+        db = dbClient[server.displayName]
+
+    collection = db["users"]
+
+    dict = vars(newUser)
+    collection.insert_one(dict)
+
+
+
+#the following two events are very similar, the only difference being a username change or a nickname change
+@bot.event
+async def on_member_update(before, after):
+    global userHistoryList
+
+    server = utils.Server
+    for i in connectedServers:
+        if i.displayName == before.guild.name:
+            server  = i
+
+    #if a nickname was changed
+    if(before.nick != after.nick):
+
+        #change it locally
+        for user in userHistoryList:
+            if user.id == before.id:
+                user.nicknames.append(after.nick)
+
+                #change it in the db
+                global dbClient
+                if(server.displayName == "UManitoba Computer Science Lounge"):
+                    db = dbClient["csDiscord"]
+                else:
+                    db = dbClient[server.displayName]
+
+                collection = db["users"]
+                query = { "id": before.id }
+                collection.delete_one(query)
+
+                collection.insert_one(vars(user))
+                print("Updating nickname for user " + before.nick + " to " + after.nick)
+                return
 
 @bot.event
-async def on_voice_state_update(member, before, after):
-    global nameList
+async def on_user_update(before, after):
+    global userHistoryList
 
-    role = discord.utils.get(member.guild.roles, name="cssa-voting")
+    server = utils.Server
+    for i in connectedServers:
+        if i.displayName == before.guild.name:
+            server  = i
 
-    if(after.channel != None and after.channel.name == "CSSA General Meeting"):
-        #they have joined
-        if not role in member.roles:
-            await member.add_roles(role)
-            print("giving voting role to " + member.name)
-            nameList.append(member.name)
+    #if a username was changed
+    if(before.name != after.name):
 
-    elif(before.channel != None and before.channel.name == "CSSA General Meeting"):
-        #they have left
-        if role in member.roles:
-            await member.remove_roles(role)
-            print("removing voting role from " + member.name)
+        #change it locally
+        for user in userHistoryList:
+            if user.id == before.id:
+                user.usernames.append(after.name)
 
+                #change it in the db
+                global dbClient
+                if(server.displayName == "UManitoba Computer Science Lounge"):
+                    db = dbClient["csDiscord"]
+                else:
+                    db = dbClient[server.displayName]
+
+                collection = db["users"]
+                query = { "id": before.id }
+                collection.delete_one(query)
+
+                collection.insert_one(vars(user))
+
+                print("Updating username for user " + before.name + " to " + after.name)
+                return
 
 
 @bot.event
@@ -402,12 +479,12 @@ async def on_reaction_add(reaction, user):
 #default format for commands, where the function name is the command to type
 @bot.command()
 @commands.has_role('admin')
-async def test(ctx, *args):
+async def test(ctx, *, args=None):
     #send the arguments of the command back to the user
-    await ctx.send(' '.join(args))
+    await ctx.send(''.join(args))
 
 
-#just to forcibly check for forum responses
+#forcibly check for forum responses
 @bot.command()
 async def forcecheck(ctx, *args):
 
@@ -909,6 +986,102 @@ async def sendmessage_error(ctx, error):
 async def nothing(ctx, *, arg): 
     pass
 
+'''
+#load all users into the database.
+#Should really only be used once
+@bot.command()
+async def uploadusers(ctx, *args):
+
+    user = ctx.message.author
+    server = getServer(ctx)
+
+    global dbClient
+    if(server.displayName == "UManitoba Computer Science Lounge"):
+        db = dbClient["csDiscord"]
+    else:
+        db = dbClient[server.displayName]
+
+    collection = db["users"]
+
+
+    if(not user.name == "dietterc"):
+        print(user.name)
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    await ctx.send("Beginning upload...")
+
+    dbList = []
+    for member in ctx.message.guild.members:
+
+        user = utils.UserHistory(member.id,member.name,member.nick)
+
+        dict = vars(user)
+        dbList.append(dict)
+        
+    #add all to the database
+    collection.insert_many(dbList)
+    await ctx.send("Finished.")
+'''
+
+@bot.command()
+async def history(ctx, *, args=None):
+
+    if(not hasPermission(ctx, "admin")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+    
+    server = getServer(ctx)
+    global dbClient
+    global userHistoryList
+    
+
+    if(args != None):
+
+        #check the whole list for a match
+        searchString = ''.join(args).lower()
+        closest = [None,0]
+
+        for user in userHistoryList:
+            
+            if(user.id == searchString):
+                await ctx.send("Exact match found for `" + searchString + "`:")
+                await ctx.send(user)
+                return
+
+            for username in user.usernames:
+                if(username.lower() == searchString):
+                    await ctx.send("Match found for `" + searchString + "`:")
+                    await ctx.send(user)
+                    return
+                else:
+                    #see how close to a match we are
+                    similarityRatio = SequenceMatcher(None, username.lower(), searchString).ratio()
+                    if similarityRatio > closest[1]:
+                        closest[0] = user
+                        closest[1] = similarityRatio
+
+            for nickname in user.nicknames:
+                if nickname != None:
+                    if(nickname.lower() == searchString):
+                        await ctx.send("Match found for `" + searchString + "`:")
+                        await ctx.send(user)
+                        return
+                    else:
+                        #see how close to a match we are
+                        similarityRatio = SequenceMatcher(None, username.lower(), searchString).ratio()
+                        if similarityRatio > closest[1]:
+                            closest[0] = user
+                            closest[1] = similarityRatio
+
+        await ctx.send("No match found for `" + searchString + "`")
+
+        if(closest[0] != None):
+            await ctx.send("Closest result: (" + str(closest[1]) + r"% similarity)")
+            await ctx.send(closest[0])
+
+    else:
+        await ctx.send("Error: Please enter at least one argument")
 
 bot.run(TOKEN)
 
