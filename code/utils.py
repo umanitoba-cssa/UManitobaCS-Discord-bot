@@ -57,11 +57,33 @@ class Email:
 class UserHistory:
     def __init__(self, id, username, nickname):
         self.id = id
-        self.usernames = []
-        self.nicknames = []
+        
+        if(type(username) != list ):
+            self.usernames = []
 
-        self.usernames.append(username)
-        self.nicknames.append(nickname)
+            self.usernames.append(username)
+        else:
+            self.usernames = username
+
+        if(type(nickname) != list ):
+            self.nicknames = []
+
+            if(nickname != None):
+                self.nicknames.append(nickname)
+        else:
+            self.nicknames = []
+            for nick in nickname:
+                if nick != None:
+                    self.nicknames.append(nick)
+        
+
 
     def __str__(self):
-        return "```\n**ID:** " + self.id + "\n**Usernames:**\n" + ", ".join(self.usernames) + "\n**Nicknames:**\n" + ", ".join(self.nicknames) + "```"
+        string = "```\nID: "
+        string += str(self.id) 
+        string += "\nUsernames:\n"
+        string += ", ".join(self.usernames)
+        string += "\nNicknames:\n"
+        string += ", ".join(self.nicknames)
+        string += "```"
+        return string
