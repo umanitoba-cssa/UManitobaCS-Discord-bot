@@ -356,6 +356,8 @@ async def on_member_update(before, after):
                 print("Updating nickname for user " + before.nick + " to " + after.nick)
                 return
 
+
+#contains temp DB fix, do not deploy to other servers with this change
 @bot.event
 async def on_user_update(before, after):
     global userHistoryList
@@ -375,10 +377,7 @@ async def on_user_update(before, after):
 
                 #change it in the db
                 global dbClient
-                if(server.displayName == "UManitoba Computer Science Lounge"):
-                    db = dbClient["csDiscord"]
-                else:
-                    db = dbClient[server.displayName]
+                db = dbClient["csDiscord"]
 
                 collection = db["users"]
                 query = { "id": before.id }
