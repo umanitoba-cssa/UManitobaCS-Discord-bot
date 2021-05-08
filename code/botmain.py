@@ -508,7 +508,7 @@ async def handleresponses(ctx, *args):
 
     #test if we can send emails
     if(not isEmailEnabled):
-        testemail_sync()
+        test_email_sync()
         if(not isEmailEnabled):
             await ctx.send("Error: Heroku must be allowed to send emails.")
         return
@@ -1043,7 +1043,7 @@ async def history(ctx, *, args=None):
 
 
 @bot.command()
-async def testemail(ctx, *, arg): 
+async def test_email(ctx,*args): 
     global isEmailEnabled
 
     if(not hasPermission(ctx, "admin")):
@@ -1083,15 +1083,15 @@ async def testemail(ctx, *, arg):
     except:
         await ctx.send("Email server is not active. Heroku must be allowed to log into the email account.")
         
-@testemail.error
-async def testemail_error(ctx, error):
+@test_email.error
+async def test_email_error(ctx, error):
     if(not hasPermission(ctx, "admin")):
         await ctx.send("Error: You do not have permission to use this command.")
         return
     await ctx.send("Email server is not active. Heroku must be allowed to log into the email account.")
 
 #Synchronous version of the above methods
-def testemail_sync(): 
+def test_email_sync(): 
     global isEmailEnabled
 
     if(isEmailEnabled):
@@ -1155,7 +1155,7 @@ async def sendmessage_error(ctx, error):
 
 
 @bot.command()
-async def nothing(ctx, *, arg): 
+async def nothing(ctx,*args): 
     pass
 
 
