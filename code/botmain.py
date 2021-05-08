@@ -43,6 +43,8 @@ formattedEmails = []
 #Should move into server object at some point
 global userHistoryList
 userHistoryList = []
+global isEmailEnabled
+isEmailEnabled = False
 
 
 dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
@@ -498,9 +500,17 @@ async def forcecheck(ctx, *args):
 
 @bot.command()
 async def handleresponses(ctx, *args):
+    global isEmailEnabled
 
     if(not hasPermission(ctx,"admin")):
         await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    #test if we can send emails
+    if(not isEmailEnabled):
+        testemail_sync()
+        if(not isEmailEnabled):
+            await ctx.send("Error: Heroku must be allowed to send emails.")
         return
 
     responses = checkForum(getServer(ctx),True)
@@ -1034,9 +1044,14 @@ async def history(ctx, *, args=None):
 
 @bot.command()
 async def testemail(ctx, *, arg): 
+    global isEmailEnabled
 
     if(not hasPermission(ctx, "admin")):
         await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    if(isEmailEnabled):
+        await ctx.send("Email server is active.")
         return
    
     try:
@@ -1063,6 +1078,7 @@ async def testemail(ctx, *, arg):
         server.close()
 
         await ctx.send("Email server is active.")
+        isEmailEnabled = True
 
     except:
         await ctx.send("Email server is not active. Heroku must be allowed to log into the email account.")
@@ -1073,6 +1089,40 @@ async def testemail_error(ctx, error):
         await ctx.send("Error: You do not have permission to use this command.")
         return
     await ctx.send("Email server is not active. Heroku must be allowed to log into the email account.")
+
+#Synchronous version of the above methods
+def testemail_sync(): 
+    global isEmailEnabled
+
+    if(isEmailEnabled):
+        return
+   
+    try:
+        sender_email = 'cssadiscordinvites@gmail.com'
+
+        receiver_email = 'cssadiscordinvites@gmail.com'
+
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Test Email"
+        message["From"] = "UofM CS Discord Form <" + sender_email + ">"
+        message["To"] = receiver_email
+
+        text = "Test Email"
+
+        html = "<p>Test Email</p>"
+
+        message.attach(MIMEText(text, "plain"))
+        message.attach(MIMEText(html, "html"))
+
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.ehlo()
+        server.login(sender_email, GMAIL_PASS)
+        server.sendmail(sender_email, receiver_email, message.as_string())
+        server.close()
+
+        isEmailEnabled = True
+    except:
+        pass
 
 
 
