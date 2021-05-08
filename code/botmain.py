@@ -530,7 +530,8 @@ async def handleresponses(ctx, *args):
             flagged = False
             #check if this is a duplicate response or if it uses an invalid email
             for j in range(currentIndex - 1):
-                if(response[2] == emails[j] or not response[2].endswith("@myumanitoba.ca")):
+                response[2] = response[2].lower().replace(" ","") #format the email
+                if(response[2] == emails[j] or not (response[2].endswith("@myumanitoba.ca" or response[2].endswith("@learning.icmanitoba.ca")))):
                     flaggedResponses.append(response)
                     flagged = True
                     break
@@ -566,15 +567,26 @@ async def handleresponses(ctx, *args):
 
         for response in flaggedResponses:
             sheet_index = emails.index(response[2],index - 1) + 1
-            responsesSheet.update_cell(sheet_index,8,"FLAGGED")
+            responsesSheet.update_cell(sheet_index,9,"FLAGGED")
 
         if(len(validResponses) > 0):
-            await ctx.send("Emails generated, use `.previewEmails` to preview.")
+            await ctx.send("Emails generated.")
             if(len(flaggedResponses) > 0):
                 await ctx.send("`" + str(len(flaggedResponses)) + "` invalid responses found.")
+
+            await ctx.send("Printing out formatted emails:")
+            for email in formattedEmails:
+                email.previewMessage = await ctx.send(str(email))
+                email.previewer = ctx.message.author
+
+                checkmark = "✔"
+                crossmark = "❌"
+                await email.previewMessage.add_reaction(checkmark)
+                await email.previewMessage.add_reaction(crossmark)
         else:
             await ctx.send("No valid responses found, no emails/invites were generated.")
 
+'''
 @bot.command()
 async def previewEmails(ctx, *args):
     global formattedEmails
@@ -596,6 +608,7 @@ async def previewEmails(ctx, *args):
 
     else:
         await ctx.send("No emails to preview.")
+'''
 
 @bot.command()
 async def iam(ctx, *args):
