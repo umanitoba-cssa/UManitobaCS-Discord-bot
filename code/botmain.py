@@ -409,7 +409,6 @@ async def on_reaction_add(reaction, user):
 
                 sender_email = 'cssadiscordinvites@gmail.com'
 
-                #Myself for testing
                 receiver_email = email.recipient
 
                 message = MIMEMultipart("alternative")
@@ -781,7 +780,6 @@ async def notify(ctx, *args):
         await ctx.send("Error: Correct format is: `" + PREFIX + r"notify {category}`.")
         return
 
-
     if(args[0].lower() in server.announcementRoles):
         role = discord.utils.get(ctx.message.guild.roles, name=args[0].lower())
         user = ctx.message.author
@@ -855,6 +853,7 @@ async def unnotify(ctx, *args):
     else:
         await ctx.send("Error: Role `" + args[0] + "` not found.")
 
+
 @bot.command()
 async def setgreetmessage(ctx, *, arg): 
     server = getServer(ctx)
@@ -874,7 +873,6 @@ async def setgreetmessage(ctx, *, arg):
         collection.update_one(dict, new_dict)
         greetMessage = arg
 
-
 @setgreetmessage.error
 async def setgreetmessage_error(ctx, error):
     server = getServer(ctx)
@@ -892,6 +890,7 @@ async def setgreetmessage_error(ctx, error):
         collection.update_one(dict, new_dict)
         server.greetMessage = ""
        
+
 @bot.command()
 async def autoassignrole(ctx,*args):
     server = getServer(ctx)
@@ -910,6 +909,7 @@ async def autoassignrole(ctx,*args):
         await ctx.send("Auto assignment of roles enabled.")
     elif(not server.autoAssign):
         await ctx.send("Auto assignment of roles disabled.")
+
 
 bot.remove_command("help")
 @bot.command()
@@ -932,11 +932,13 @@ async def help(ctx,*args):
         embed.add_field(name="Available commands", value=content, inline=False)
         await ctx.send(embed=embed)
 
+
 @bot.command()
 async def cssa(ctx,*args):
     file = open("templates/cssa.txt","r")
     await ctx.send(file.read())
     file.close()
+
 
 @bot.command()
 async def wics(ctx,*args): 
@@ -944,84 +946,18 @@ async def wics(ctx,*args):
     await ctx.send(file.read())
     file.close()
 
+
 @bot.command()
 async def devclub(ctx,*args):
     file = open("templates/devclub.txt","r")
     await ctx.send(file.read())
     file.close()
 
+
 @bot.command()
 async def form(ctx,*args):
     await ctx.send("https://forms.gle/HSinscg1aStKjQR4A")
 
-## Fun commands
-@bot.command()
-async def sendmessage(ctx, *, arg): 
-    server = getServer(ctx)
-
-    if(not hasPermission(ctx, "admin")):
-        await ctx.send("Error: You do not have permission to use this command.")
-        return
-
-    guild = discord.utils.get(bot.guilds, name=server.displayName)
-
-    #assume message is in the format CHANNEL##MESSAGE
-    rawMessage = arg.split("##")
-    channel = discord.utils.get(guild.channels, name=rawMessage[0])
-    message = rawMessage[1]
-
-    if(channel):
-        await channel.send(message)
-
-@sendmessage.error
-async def sendmessage_error(ctx, error):
-    if isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
-        if(not hasPermission(ctx, "admin")):
-            await ctx.send("Error: You do not have permission to use this command.")
-            return
-        await ctx.send("Error: No message to send.")
-
-@bot.command()
-async def nothing(ctx, *, arg): 
-    pass
-
-'''
-#load all users into the database.
-#Should really only be used once
-@bot.command()
-async def uploadusers(ctx, *args):
-
-    user = ctx.message.author
-    server = getServer(ctx)
-
-    global dbClient
-    if(server.displayName == "UManitoba Computer Science Lounge"):
-        db = dbClient["csDiscord"]
-    else:
-        db = dbClient[server.displayName]
-
-    collection = db["users"]
-
-
-    if(not user.name == "dietterc"):
-        print(user.name)
-        await ctx.send("Error: You do not have permission to use this command.")
-        return
-
-    await ctx.send("Beginning upload...")
-
-    dbList = []
-    for member in ctx.message.guild.members:
-
-        user = utils.UserHistory(member.id,member.name,member.nick)
-
-        dict = vars(user)
-        dbList.append(dict)
-        
-    #add all to the database
-    collection.insert_many(dbList)
-    await ctx.send("Finished.")
-'''
 
 @bot.command()
 async def history(ctx, *, args=None):
@@ -1081,6 +1017,84 @@ async def history(ctx, *, args=None):
 
     else:
         await ctx.send("Error: Please enter at least one argument")
+
+
+@bot.command()
+async def testemail(ctx, *, arg): 
+
+    if(not hasPermission(ctx, "admin")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+   
+    try:
+        sender_email = 'cssadiscordinvites@gmail.com'
+
+        receiver_email = 'cssadiscordinvites@gmail.com'
+
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Test Email"
+        message["From"] = "UofM CS Discord Form <" + sender_email + ">"
+        message["To"] = receiver_email
+
+        text = "Test Email"
+
+        html = "<p>Test Email</p>"
+
+        message.attach(MIMEText(text, "plain"))
+        message.attach(MIMEText(html, "html"))
+
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.ehlo()
+        server.login(sender_email, GMAIL_PASS)
+        server.sendmail(sender_email, receiver_email, message.as_string())
+        server.close()
+
+        await ctx.send("Email server is active.")
+
+    except:
+        await ctx.send("Email server is not active. Heroku must be allowed to log into the email account.")
+        
+@testemail.error
+async def testemail_error(ctx, error):
+    if(not hasPermission(ctx, "admin")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+    await ctx.send("Email server is not active. Heroku must be allowed to log into the email account.")
+
+
+
+##---------------Fun commands---------------
+@bot.command()
+async def sendmessage(ctx, *, arg): 
+    server = getServer(ctx)
+
+    if(not hasPermission(ctx, "admin")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    guild = discord.utils.get(bot.guilds, name=server.displayName)
+
+    #assume message is in the format CHANNEL##MESSAGE
+    rawMessage = arg.split("##")
+    channel = discord.utils.get(guild.channels, name=rawMessage[0])
+    message = rawMessage[1]
+
+    if(channel):
+        await channel.send(message)
+
+@sendmessage.error
+async def sendmessage_error(ctx, error):
+    if isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
+        if(not hasPermission(ctx, "admin")):
+            await ctx.send("Error: You do not have permission to use this command.")
+            return
+        await ctx.send("Error: No message to send.")
+
+
+@bot.command()
+async def nothing(ctx, *, arg): 
+    pass
+
 
 bot.run(TOKEN)
 

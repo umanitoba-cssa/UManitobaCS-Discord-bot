@@ -6,9 +6,9 @@
 </a>
 	<br><br>
 	This is a single use invite meant for you to use, so please don't share it with anyone.<br>
-	After joining, make sure to check out the #welcome channel. We look forward to seeing you there!
+	After joining, make sure to check out the #welcome and #info-and-commands channels. We look forward to seeing you there!
 	<br><br>
-	- Colton Dietterle, CSSA Executive
+	- Colton Dietterle, CSSA VP of Lounge Affairs
     </p>
     <p><small> Was this message sent to you by accident? Has the link expired? Send us a reply and we can sort things out!</small></p>
 <p><small> This message was sent with our own Discord bot, if there were any issues please let us know!<br>Check out the code <a href="https://github.com/dietterc/UManitobaCS-Discord-bot">here.</a></small></p>
