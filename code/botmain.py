@@ -1124,6 +1124,62 @@ def test_email_sync():
     except:
         pass
 
+#TEMP because google is mean:
+@bot.command()
+async def genInvite(ctx, *, args=None):
+
+    if(not hasPermission(ctx, "admin")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    if(len(args) == 0):
+        await ctx.send("Error: Command arguments required")
+        return
+
+    server = getServer(ctx)
+    guild = discord.utils.get(bot.guilds, name=server.displayName)
+    inviteChannel = discord.utils.get(guild.channels, name="introductions")
+    global dbClient
+    if(server.displayName == "UManitoba Computer Science Lounge"):
+        db = dbClient["csDiscord"]
+    else:
+        db = dbClient[server.displayName]
+    collection = db["invites"]
+
+    args = ''.join(args)
+
+    arguments = args.replace(" ","").split(",")
+    for i in range(1,len(arguments)):
+        if(arguments[i] == 'cssa'):
+            arguments[i] = "CSSA Events"
+        elif(arguments[i] == 'wics'):
+            arguments[i] = "WICS Events"
+        elif(arguments[i] == 'dev'):
+            arguments[i] = ".devClub Events"
+        elif(arguments[i] == 'movie'):
+            arguments[i] = "Movie nights"
+        elif(arguments[i] == 'game'):
+            arguments[i] = "Game nights"
+        elif(arguments[i] == 'student'):
+            arguments[i] = "Student"
+        elif(arguments[i] == 'alum'):
+            arguments[i] = "Alumni"
+
+    #generate an invite link
+    newInvite = await inviteChannel.create_invite(max_uses=5, unique=True, reason="Created invite for user: " + arguments[0])
+    #generate a utils link to be saved server side
+    roles = arguments[1:]
+    invite = utils.Invite(newInvite.url,0,server.displayName,roles)
+    server.invites.append(invite)
+    #add it to the database
+    dict = vars(invite)
+    collection.insert_one(dict)
+
+    roleString = ""
+    for x in roles:
+        roleString += x + "\n"
+
+    await ctx.send("Invite generated:``` " + arguments[0] + "\n" + invite.url + "\nRoles:\n" + roleString + "```")
 
 
 ##---------------Fun commands---------------
