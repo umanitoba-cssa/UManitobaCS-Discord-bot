@@ -979,7 +979,7 @@ async def devclub(ctx,*args):
 
 @bot.command()
 async def form(ctx,*args):
-    await ctx.send("https://forms.gle/HSinscg1aStKjQR4A")
+    await ctx.send("https://forms.gle/C11YVJDVW2DhcbjXA")
 
 
 @bot.command()
