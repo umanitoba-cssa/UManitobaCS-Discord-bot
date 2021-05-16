@@ -190,6 +190,7 @@ def getServer(ctx):
     else:
         return -1
 
+'''
 def checkForum(server, forced):
     #check only the UofM server for now, functionality for other servers will be added later. 
 
@@ -211,6 +212,7 @@ def checkForum(server, forced):
 
             return len(names) - lastIndex
     return 0
+'''
 
 #Start bot
 intent = discord.Intents(messages=True, members=True, guilds=True, reactions=True, voice_states=True)
@@ -364,11 +366,6 @@ async def on_member_update(before, after):
 async def on_user_update(before, after):
     global userHistoryList
 
-    server = utils.Server
-    for i in connectedServers:
-        if i.displayName == before.guild.name:
-            server  = i
-
     #if a username was changed
     if(before.name != after.name):
 
@@ -390,7 +387,7 @@ async def on_user_update(before, after):
                 print("Updating username for user " + before.name + " to " + after.name)
                 return
 
-
+'''
 @bot.event
 async def on_reaction_add(reaction, user):
     #print(user.display_name + " sent a reaction")
@@ -473,6 +470,8 @@ async def on_reaction_add(reaction, user):
 
         flaggedEmails = []
         sentEmails = []
+'''
+
 
 #### Commands ####
 
@@ -483,7 +482,7 @@ async def test(ctx, *, args=None):
     #send the arguments of the command back to the user
     await ctx.send(''.join(args))
 
-
+'''
 #forcibly check for forum responses
 @bot.command()
 async def forcecheck(ctx, *args):
@@ -596,7 +595,6 @@ async def handleresponses(ctx, *args):
         else:
             await ctx.send("No valid responses found, no emails/invites were generated.")
 
-'''
 @bot.command()
 async def previewEmails(ctx, *args):
     global formattedEmails
@@ -1042,6 +1040,7 @@ async def history(ctx, *, args=None):
         await ctx.send("Error: Please enter at least one argument")
 
 
+'''
 @bot.command()
 async def test_email(ctx,*args): 
     global isEmailEnabled
@@ -1123,6 +1122,7 @@ def test_email_sync():
         isEmailEnabled = True
     except:
         pass
+'''
 
 #TEMP because google is mean:
 @bot.command()
