@@ -1155,7 +1155,7 @@ async def genInvite(ctx, *, args=None):
         elif(arguments[i] == 'wics'):
             arguments[i] = "WICS Events"
         elif(arguments[i] == 'dev'):
-            arguments[i] = ".devClub Events"
+            arguments[i] = ".devclub Events"
         elif(arguments[i] == 'movie'):
             arguments[i] = "Movie nights"
         elif(arguments[i] == 'game'):
