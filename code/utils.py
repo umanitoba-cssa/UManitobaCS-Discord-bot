@@ -13,6 +13,7 @@ class Server:
         self.yearRoles = []
         self.adminRoles = []
         self.invites = []
+        self.lastGreetingId = -1
 
         self.autoAssign = True
         self.greetMessage = ""

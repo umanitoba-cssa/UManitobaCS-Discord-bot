@@ -138,7 +138,7 @@ def readInData(serverName):
         server.invites.append(invite)
         print(vars(invite))
     
-
+    #user history
     collection = db["users"]
     rawValues = collection.find({})
 
@@ -151,6 +151,13 @@ def readInData(serverName):
         userHistoryList.append(user)
 
 
+    #last greet message
+    collection = db["lastGreetMsg"]
+    rawValues = collection.find({},{"messageId"})
+    server.lastGreetingId = rawValues[0]["messageId"]
+    print("Loaded in last greet message id: " + str(server.lastGreetingId))
+
+    
     print("\nFinished loading in data for " + server.displayName)
 
     connectedServers.append(server)
@@ -236,6 +243,8 @@ async def on_ready():
 @bot.event
 async def on_member_join(member):
 
+    global dbClient
+
     guild = member.guild
     guildInvites = await guild.invites()
 
@@ -245,14 +254,56 @@ async def on_member_join(member):
     server = utils.Server
     for i in connectedServers:
         if i.displayName == guild.name:
-            server  = i
+            server = i
 
-    if(server.greetMessage != ""):
-        await channel.send(server.greetMessage.replace(f"%user%", member.mention))
+
+
+    #db
+    '''if(server.displayName == "UManitoba Computer Science Lounge"):
+        
+    else:
+        db = dbClient[server.displayName]
+    '''
+    db = dbClient["csDiscord"]
+
+    #delete last greet message 
+
+    class GreetMsg:
+        def __init__(self,id):
+            self.messageId = id
+    
+    greetingFound = False
+
+    newGreeting = discord.message
+    if(server.lastGreetingId != -1):
+        messages = await channel.history(limit=20).flatten()
+        for message in messages:
+            if(message.id == server.lastGreetingId):
+                await message.delete()
+                newGreeting = await channel.send(server.greetMessage.replace("<nl>","\n"))
+
+                collection = db["lastGreetMsg"]
+                dict = vars(GreetMsg(server.lastGreetingId))
+                collection.delete_one(dict)
+
+                server.lastGreetingId = newGreeting.id
+                greetingFound = True
+    
+    if(not greetingFound):
+        newGreeting = await channel.send(server.greetMessage.replace("<nl>","\n"))
+
+        collection = db["lastGreetMsg"]
+        dict = vars(GreetMsg(server.lastGreetingId))
+        collection.delete_one(dict)
+
+        server.lastGreetingId = newGreeting.id
+
+    collection = db["lastGreetMsg"]
+    dict = vars(GreetMsg(newGreeting.id))
+    collection.insert_one(dict)
 
     usedInvite = utils.Invite
     inviteFound = False
-    
     for i in guildInvites:
         for j in server.invites:
             if i.url == j.url:
@@ -295,7 +346,6 @@ async def on_member_join(member):
         await member.add_roles(autoRole)
 
         #remove the old invite from the database/server memory
-        global dbClient
         
         if(server.displayName == "UManitoba Computer Science Lounge"):
             db = dbClient["csDiscord"]
@@ -315,11 +365,6 @@ async def on_member_join(member):
     newUser = utils.UserHistory(member.id,member.name,member.nick)
     userHistoryList.append(newUser)
     
-    if(server.displayName == "UManitoba Computer Science Lounge"):
-        db = dbClient["csDiscord"]
-    else:
-        db = dbClient[server.displayName]
-
     collection = db["users"]
 
     dict = vars(newUser)
