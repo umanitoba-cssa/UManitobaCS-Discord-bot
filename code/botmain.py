@@ -432,7 +432,7 @@ async def on_user_update(before, after):
                 print("Updating username for user " + before.name + " to " + after.name)
                 return
 
-'''
+
 @bot.event
 async def on_reaction_add(reaction, user):
     #print(user.display_name + " sent a reaction")
@@ -445,43 +445,7 @@ async def on_reaction_add(reaction, user):
     for email in formattedEmails:
         if  not user.bot and email.previewMessage == reaction.message:
             if str(reaction.emoji) == "✔":
-                await email.previewMessage.edit(content="Invite email sent to " + email.recipient)
-                await email.previewMessage.clear_reactions()
-
-                #send emails
-                print("Sending email to " + email.recipient)
-
-                sender_email = 'cssadiscordinvites@gmail.com'
-
-                receiver_email = email.recipient
-
-                message = MIMEMultipart("alternative")
-                message["Subject"] = email.subject
-                message["From"] = "UofM CS Discord Form <" + sender_email + ">"
-                message["To"] = receiver_email
-
-                text = open("templates/template_plain.txt","r").read().format(d_invite = email.inviteUrl)
-
-                html = email.body
-
-                message.attach(MIMEText(text, "plain"))
-                message.attach(MIMEText(html, "html"))
-
-                try:
-                    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-                    server.ehlo()
-                    server.login(sender_email, GMAIL_PASS)
-                    server.sendmail(sender_email, receiver_email, message.as_string())
-                    server.close()
-
-                    print("Email sent!")
-
-                except:
-                    print("Something went wrong... Email not sent.")
-
-                #update spreadsheet to say sent
-                sentEmails.append(email)
-                formattedEmails.remove(email)
+ 
 
             elif str(reaction.emoji) == "❌":
                 await email.previewMessage.edit(content="Invite email will not be sent. The response was flagged in the spreadsheet. " + email.recipient)
@@ -490,32 +454,6 @@ async def on_reaction_add(reaction, user):
                 flaggedEmails.append(email)
                 formattedEmails.remove(email)
 
-    #code for updating spreadsheet here
-    if(len(flaggedEmails) > 0 or len(sentEmails) > 0):
-        
-        #open the responses spread-sheet
-        scope = ['https://spreadsheets.google.com/feeds',
-                        'https://www.googleapis.com/auth/drive']
-        creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
-        client = gspread.authorize(creds)
-        responsesSheet = client.open("Responses to discord signup").sheet1
-
-        emails = responsesSheet.col_values(3)
-        sheet_index = len(responsesSheet.col_values(8)) + 1 #the index of the first new response (starts at 1)
-
-        for email in sentEmails:
-            index = emails.index(email.recipient,sheet_index - 1) + 1
-            responsesSheet.update_cell(index,8,"sent")
-            responsesSheet.update_cell(index,7,email.inviteUrl)
-        
-        for email in flaggedEmails:
-            index = emails.index(email.recipient,sheet_index - 1) + 1
-            responsesSheet.update_cell(index,8,"FLAGGED")
-            responsesSheet.update_cell(index,7,email.inviteUrl)
-
-        flaggedEmails = []
-        sentEmails = []
-'''
 
 
 #### Commands ####
@@ -1085,6 +1023,42 @@ async def history(ctx, *, args=None):
         await ctx.send("Error: Please enter at least one argument")
 
 
+#send a message and give it a role assigning reaction
+@bot.command()
+async def reactionRole(ctx, *, args=None): 
+    server = getServer(ctx)
+    global dbClient
+    if(server.displayName == "UManitoba Computer Science Lounge"):
+        db = dbClient["csDiscord"]
+    else:
+        db = dbClient[server.displayName]
+
+    if(not hasPermission(ctx, "admin")):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    if(args != None):
+        guild = discord.utils.get(bot.guilds, name=server.displayName)
+
+        #assume message is in the format CHANNEL,EMOJI,ROLE##MESSAGE
+        rawMessage = arg.split("##")
+        splitArgs = rawMessage[0].split(",")
+        channel = discord.utils.get(guild.channels, name=splitArgs[0])
+        emoji = splitArgs[1]
+        role = discord.utils.get(guild.roles, name=splitArgs[2])
+        message = rawMessage[1]
+
+        if(channel):
+            sentMessage = await channel.send(message)
+            sentMessage.add_reaction(emoji)
+
+            collection = db["reaction_role_messages"]
+            dict = { "channel": splitArgs[0], "emoji": splitArgs[1], "role": splitArgs[2], "messageId": sentMessage.id }
+            collection.insert_one(dict)
+        
+
+
+#The following is commented because of the google form lockout
 '''
 @bot.command()
 async def test_email(ctx,*args): 
