@@ -38,7 +38,7 @@ else:
 PREFIX = '.'
 
 connectedServers = []
-formattedEmails = []
+reactionMessages = []
 
 #Should move into server object at some point
 global userHistoryList
@@ -150,14 +150,25 @@ def readInData(serverName):
         user = utils.UserHistory(id,usernames,nicknames)
         userHistoryList.append(user)
 
-
     #last greet message
     collection = db["lastGreetMsg"]
     rawValues = collection.find({},{"messageId"})
     server.lastGreetingId = rawValues[0]["messageId"]
     print("Loaded in last greet message id: " + str(server.lastGreetingId))
 
+    #reaction Messages
+    collection = db["reaction_role_messages"]
+    rawValues = collection.find({})
+    for i in rawValues:
+        emoji = i["emoji"]
+        role = i["role"]
+        messageId = i["messageId"]
+
+        reactionMessage = utils.ReactionMessage(emoji,role,messageId)
+        global reactionMessages
+        reactionMessages.append(reactionMessage)
     
+
     print("\nFinished loading in data for " + server.displayName)
 
     connectedServers.append(server)
@@ -436,24 +447,45 @@ async def on_user_update(before, after):
 @bot.event
 async def on_reaction_add(reaction, user):
     #print(user.display_name + " sent a reaction")
-    global formattedEmails
+    global reactionMessages
 
-    sentEmails = []
-    flaggedEmails = []
+    for message in reactionMessages:
+        if  not user.bot and message.messageId == reaction.message.id:
+            if str(reaction.emoji) == str(message.emoji):
+                role = discord.utils.get(reaction.message.guild.roles, name=message.role)
+                member = discord.utils.get(reaction.message.guild.members, id=user.id)
+                print("Adding role " + message.role + "to user " + user.mention)
+                await member.add_roles(role)
 
-    #check if there are formatted emails being displayed
-    for email in formattedEmails:
-        if  not user.bot and email.previewMessage == reaction.message:
-            if str(reaction.emoji) == "✔":
- 
+@bot.event
+async def on_reaction_remove(reaction, user):
+    #print(user.display_name + " sent a reaction")
+    global reactionMessages
 
-            elif str(reaction.emoji) == "❌":
-                await email.previewMessage.edit(content="Invite email will not be sent. The response was flagged in the spreadsheet. " + email.recipient)
+    for message in reactionMessages:
+        if  not user.bot and message.messageId == reaction.message.id:
+            if str(reaction.emoji) == str(message.emoji):
+                role = discord.utils.get(reaction.message.guild.roles, name=message.role)
+                member = discord.utils.get(reaction.message.guild.members, id=user.id)
+                print("Removing role " + message.role + "to user " + user.mention)
+                await member.remove_roles(role)
 
-                #add to flagged emails 
-                flaggedEmails.append(email)
-                formattedEmails.remove(email)
+@bot.event
+async def on_message_delete(message):
+    global reactionMessages
+    global dbClient
+    db = dbClient["csDiscord"]
 
+    for msg in reactionMessages:
+        if msg.messageId == message.id:
+            reactionMessages.remove(msg)
+
+            #remove it from the db
+            collection = db["reaction_role_messages"]
+            dict = { "emoji": msg.emoji, "role": msg.role, "messageId": msg.messageId }
+            collection.delete_one(dict)
+                    
+            print("Reaction role message deleted.")
 
 
 #### Commands ####
@@ -1041,7 +1073,7 @@ async def reactionRole(ctx, *, args=None):
         guild = discord.utils.get(bot.guilds, name=server.displayName)
 
         #assume message is in the format CHANNEL,EMOJI,ROLE##MESSAGE
-        rawMessage = arg.split("##")
+        rawMessage = args.split("##")
         splitArgs = rawMessage[0].split(",")
         channel = discord.utils.get(guild.channels, name=splitArgs[0])
         emoji = splitArgs[1]
@@ -1050,11 +1082,13 @@ async def reactionRole(ctx, *, args=None):
 
         if(channel):
             sentMessage = await channel.send(message)
-            sentMessage.add_reaction(emoji)
+            await sentMessage.add_reaction(emoji)
 
             collection = db["reaction_role_messages"]
-            dict = { "channel": splitArgs[0], "emoji": splitArgs[1], "role": splitArgs[2], "messageId": sentMessage.id }
+            dict = { "emoji": splitArgs[1], "role": role.name, "messageId": sentMessage.id }
             collection.insert_one(dict)
+            global reactionMessages
+            reactionMessages.append(utils.ReactionMessage(emoji,role.name,sentMessage.id))
         
 
 

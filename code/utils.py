@@ -76,9 +76,6 @@ class UserHistory:
             for nick in nickname:
                 if nick != None:
                     self.nicknames.append(nick)
-        
-
-
     def __str__(self):
         string = "```\nID: "
         string += str(self.id) 
@@ -88,3 +85,9 @@ class UserHistory:
         string += ", ".join(self.nicknames)
         string += "```"
         return string
+
+class ReactionMessage:
+    def __init__(self, emoji, role, messageId):
+        self.emoji = emoji
+        self.role = role
+        self.messageId = messageId
