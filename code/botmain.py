@@ -11,11 +11,10 @@ from pymongo.database import Database
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 #Email stuff
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from difflib import SequenceMatcher
 
+#slash/buttons
+from dislash import InteractionClient, ActionRow, Button, ButtonStyle, SelectMenu, SelectOption
 
 
 # Check if we are running on heroku or locally 
@@ -23,7 +22,6 @@ is_heroku = os.environ.get('IS_HEROKU', None)
 if is_heroku:
     TOKEN = os.environ.get('DISCORD_TOKEN', None)
     DB_PASS = os.environ.get('DB_PASS', None)
-    GMAIL_PASS = os.environ.get('GMAIL_PASS', None)
     client_secret_txt = os.environ.get('CLIENT_SECRET', None)
     client_secret = open("client_secret.json","w")
     client_secret.write(client_secret_txt)
@@ -33,7 +31,6 @@ else:
     load_dotenv()
     TOKEN = os.getenv('DISCORD_TOKEN')
     DB_PASS = os.getenv('DB_PASS')
-    GMAIL_PASS = os.getenv('GMAIL_PASS', None)
 
 PREFIX = '.'
 
@@ -45,7 +42,6 @@ global userHistoryList
 userHistoryList = []
 global isEmailEnabled
 isEmailEnabled = False
-
 
 dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
 
@@ -209,9 +205,7 @@ def getServer(ctx):
         return -1
 
 '''
-def checkForum(server, forced):
-    #check only the UofM server for now, functionality for other servers will be added later. 
-
+def checkForum(server, forced): 
     if(server.displayName == "UManitoba Computer Science Lounge" or forced):
         if(server.formLastChecked == 0 or time.time() - server.formLastChecked > 43200*2 or forced): 
             #first check or 12 hours have passed since last check
@@ -235,7 +229,7 @@ def checkForum(server, forced):
 #Start bot
 intent = discord.Intents(messages=True, members=True, guilds=True, reactions=True, voice_states=True)
 bot = commands.Bot(command_prefix=PREFIX, intents = intent)
-
+inter_client = InteractionClient(bot)
 
 @bot.event
 async def on_ready():
@@ -248,7 +242,6 @@ async def on_ready():
             server = readInData("csDiscord")
         else:
             server = readInData(guild.name.replace(" ","-"))
-        #checkForum(server,False)
 
 
 @bot.event
@@ -267,18 +260,10 @@ async def on_member_join(member):
         if i.displayName == guild.name:
             server = i
 
-
-
     #db
-    '''if(server.displayName == "UManitoba Computer Science Lounge"):
-        
-    else:
-        db = dbClient[server.displayName]
-    '''
     db = dbClient["csDiscord"]
 
     #delete last greet message 
-
     class GreetMsg:
         def __init__(self,id):
             self.messageId = id
@@ -312,6 +297,7 @@ async def on_member_join(member):
     collection = db["lastGreetMsg"]
     dict = vars(GreetMsg(newGreeting.id))
     collection.insert_one(dict)
+
 
     usedInvite = utils.Invite
     inviteFound = False
@@ -514,24 +500,16 @@ async def forcecheck(ctx, *args):
 
 @bot.command()
 async def handleresponses(ctx, *args):
-    global isEmailEnabled
 
     if(not hasPermission(ctx,"admin")):
         await ctx.send("Error: You do not have permission to use this command.")
-        return
-
-    #test if we can send emails
-    if(not isEmailEnabled):
-        test_email_sync()
-        if(not isEmailEnabled):
-            await ctx.send("Error: Heroku must be allowed to send emails.")
         return
 
     responses = checkForum(getServer(ctx),True)
     if(responses <= 0):
         await ctx.send("There are no new form responses.")
     else:
-        await ctx.send("Generating emails/invites...")
+        await ctx.send("Generating invites...")
 
         #open the responses spread-sheet
         scope = ['https://spreadsheets.google.com/feeds',
@@ -566,10 +544,7 @@ async def handleresponses(ctx, *args):
         guild = discord.utils.get(bot.guilds, name=server.displayName)
         inviteChannel = discord.utils.get(guild.channels, name="introductions")
         global dbClient
-        if(server.displayName == "UManitoba Computer Science Lounge"):
-            db = dbClient["csDiscord"]
-        else:
-            db = dbClient[server.displayName]
+        db = dbClient["csDiscord"]
         collection = db["invites"]
         global formattedEmails
         formattedEmails.clear()
@@ -610,27 +585,6 @@ async def handleresponses(ctx, *args):
         else:
             await ctx.send("No valid responses found, no emails/invites were generated.")
 
-@bot.command()
-async def previewEmails(ctx, *args):
-    global formattedEmails
-
-    if(not hasPermission(ctx,"admin")):
-        await ctx.send("Error: You do not have permission to use this command.")
-        return
-
-    if(len(formattedEmails) != 0):
-        await ctx.send("Printing out formatted emails:")
-        for email in formattedEmails:
-            email.previewMessage = await ctx.send(str(email))
-            email.previewer = ctx.message.author
-
-            checkmark = "✔"
-            crossmark = "❌"
-            await email.previewMessage.add_reaction(checkmark)
-            await email.previewMessage.add_reaction(crossmark)
-
-    else:
-        await ctx.send("No emails to preview.")
 '''
 
 @bot.command()
@@ -1060,10 +1014,7 @@ async def history(ctx, *, args=None):
 async def reactionRole(ctx, *, args=None): 
     server = getServer(ctx)
     global dbClient
-    if(server.displayName == "UManitoba Computer Science Lounge"):
-        db = dbClient["csDiscord"]
-    else:
-        db = dbClient[server.displayName]
+    db = dbClient["csDiscord"]
 
     if(not hasPermission(ctx, "admin")):
         await ctx.send("Error: You do not have permission to use this command.")
@@ -1090,92 +1041,6 @@ async def reactionRole(ctx, *, args=None):
             global reactionMessages
             reactionMessages.append(utils.ReactionMessage(emoji,role.name,sentMessage.id))
         
-
-
-#The following is commented because of the google form lockout
-'''
-@bot.command()
-async def test_email(ctx,*args): 
-    global isEmailEnabled
-
-    if(not hasPermission(ctx, "admin")):
-        await ctx.send("Error: You do not have permission to use this command.")
-        return
-
-    if(isEmailEnabled):
-        await ctx.send("Email server is active.")
-        return
-   
-    try:
-        sender_email = 'cssadiscordinvites@gmail.com'
-
-        receiver_email = 'cssadiscordinvites@gmail.com'
-
-        message = MIMEMultipart("alternative")
-        message["Subject"] = "Test Email"
-        message["From"] = "UofM CS Discord Form <" + sender_email + ">"
-        message["To"] = receiver_email
-
-        text = "Test Email"
-
-        html = "<p>Test Email</p>"
-
-        message.attach(MIMEText(text, "plain"))
-        message.attach(MIMEText(html, "html"))
-
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server.ehlo()
-        server.login(sender_email, GMAIL_PASS)
-        server.sendmail(sender_email, receiver_email, message.as_string())
-        server.close()
-
-        await ctx.send("Email server is active.")
-        isEmailEnabled = True
-
-    except:
-        await ctx.send("Email server is not active. Heroku must be allowed to log into the email account.")
-        
-@test_email.error
-async def test_email_error(ctx, error):
-    if(not hasPermission(ctx, "admin")):
-        await ctx.send("Error: You do not have permission to use this command.")
-        return
-    await ctx.send("Email server is not active. Heroku must be allowed to log into the email account.")
-
-#Synchronous version of the above methods
-def test_email_sync(): 
-    global isEmailEnabled
-
-    if(isEmailEnabled):
-        return
-   
-    try:
-        sender_email = 'cssadiscordinvites@gmail.com'
-
-        receiver_email = 'cssadiscordinvites@gmail.com'
-
-        message = MIMEMultipart("alternative")
-        message["Subject"] = "Test Email"
-        message["From"] = "UofM CS Discord Form <" + sender_email + ">"
-        message["To"] = receiver_email
-
-        text = "Test Email"
-
-        html = "<p>Test Email</p>"
-
-        message.attach(MIMEText(text, "plain"))
-        message.attach(MIMEText(html, "html"))
-
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server.ehlo()
-        server.login(sender_email, GMAIL_PASS)
-        server.sendmail(sender_email, receiver_email, message.as_string())
-        server.close()
-
-        isEmailEnabled = True
-    except:
-        pass
-'''
 
 #TEMP because google is mean:
 @bot.command()
@@ -1266,6 +1131,63 @@ async def sendmessage_error(ctx, error):
 @bot.command()
 async def nothing(ctx,*args): 
     pass
+
+
+@bot.command()
+async def button(ctx):
+    # Make a row of buttons
+    row_of_buttons = ActionRow(
+        Button(
+            style=ButtonStyle.green,
+            label="Green button",
+            custom_id="green"
+        ),
+        Button(
+            style=ButtonStyle.red,
+            label="Red button",
+            custom_id="test_button"
+        )
+    )
+    # Send a message with buttons
+    msg = await ctx.send(
+        "This message has buttons!",
+        components=[row_of_buttons]
+    )
+
+    on_click = msg.create_click_listener()
+
+    @on_click.matching_id("red")
+    async def on_test_button(inter):
+        await inter.reply("You've clicked the red button!")
+
+    @on_click.matching_id("green")
+    async def on_test_button(inter):
+        await inter.reply("You've clicked the green button!")
+
+
+@bot.command()
+async def menu(ctx):
+    msg = await ctx.send(
+        "This message has a select menu!",
+        components=[
+            SelectMenu(
+                custom_id="test",
+                placeholder="Choose up to 2 options",
+                max_values=2,
+                options=[
+                    SelectOption("Option 1", "value 1"),
+                    SelectOption("Option 2", "value 2"),
+                    SelectOption("Option 3", "value 3")
+                ]
+            )
+        ]
+    )
+    # Wait for someone to click on it
+    inter = await msg.wait_for_dropdown()
+    # Send what you received
+    labels = [option.label for option in inter.select_menu.selected_options]
+    await inter.reply(f"Options: {', '.join(labels)}")
+
 
 
 bot.run(TOKEN)
