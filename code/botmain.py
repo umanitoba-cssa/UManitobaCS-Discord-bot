@@ -1041,6 +1041,30 @@ async def reactionRole(ctx, *, args=None):
             global reactionMessages
             reactionMessages.append(utils.ReactionMessage(emoji,role.name,sentMessage.id))
         
+@bot.command()
+async def setupRolesChannel(ctx, *, args=None): 
+    server = getServer(ctx)
+    user = ctx.message.author
+
+    global dbClient
+    db = dbClient["csDiscord"]
+
+    #only Colton 
+    if(not user.id == 168594133781446656):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    text_channel = discord.utils.get(guild.channels, name=args)
+
+    #Colour role
+
+
+    #Channel access roles 
+
+
+    #Notification roles
+
+
 
 #TEMP because google is mean:
 @bot.command()
