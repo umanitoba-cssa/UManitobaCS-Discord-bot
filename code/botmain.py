@@ -399,7 +399,7 @@ async def on_member_update(before, after):
                 collection.delete_one(query)
 
                 collection.insert_one(vars(user))
-                print("Updating nickname for user " + before.nick + " to " + after.nick)
+                print("Updating nickname for user " + before.mention + " to " + after.nick)
                 return
 
 
@@ -472,6 +472,11 @@ async def on_message_delete(message):
             collection.delete_one(dict)
                     
             print("Reaction role message deleted.")
+
+@bot.event
+async def on_dropdown(inter):
+    labels = [option.label for option in inter.select_menu.selected_options]
+    await inter.reply(f"Options: {', '.join(labels)}")
 
 
 #### Commands ####
@@ -1054,16 +1059,83 @@ async def setupRolesChannel(ctx, *, args=None):
         await ctx.send("Error: You do not have permission to use this command.")
         return
 
-    text_channel = discord.utils.get(guild.channels, name=args)
-
-    #Colour role
-
+    text_channel = discord.utils.get(ctx.guild.channels, name=args)
 
     #Channel access roles 
+    yearMsg = await ctx.send(
+        "\n__**Year roles:**__ \nWant access to text channels related to the COMP classes you are in?\nSelect any of the following!",
+        components=[
+            SelectMenu(
+                custom_id="years",
+                placeholder="Choose as many options as you like",
+                max_values=4,
+                min_values=0,
+                options=[
+                    SelectOption("First year", "year1", "Gain access to COMP 1xxx channels","1️⃣"),
+                    SelectOption("Second year", "year2", "Gain access to COMP 2xxx channels","2️⃣"),
+                    SelectOption("Third year", "year3", "Gain access to COMP 3xxx channels","3️⃣"),
+                    SelectOption("Fourth year", "year4", "Gain access to COMP 4xxx channels","4️⃣"),
+                    SelectOption("Remove all years", "remove-years", "Remove all year roles. Overwrites all other options.", "❌")
+                ]
+            )
+        ]
+    )
+    yearMsg2 = await ctx.send("You can also use the command `.iam <first/second/etc..> year` to manually add the roles. To remove a year role use `.iamn <year>`, `.iamnot <year>`, or de-select it in the menu above.\n*Note: Course specific channels only exist for courses that are being taught in the current term.*")
 
 
     #Notification roles
+    notificationMsg = await ctx.send(
+        "**~**\n\n__**Notification roles:**__ \nSelect what you would like to receive notifications about on the server!",
+        components=[
+            SelectMenu(
+                custom_id="notifications",
+                placeholder="Choose as many options as you like",
+                max_values=6,
+                min_values=0,
+                options=[
+                    SelectOption("Announcements", "announcements", "Server-wide announcements"),
+                    SelectOption("CSSA", "cssa", "Announcements from the CSSA"),
+                    SelectOption("WICS", "wics", "Announcements from WICS"),
+                    SelectOption(".devclub", "devclub", "Announcements from .devclub"),
+                    SelectOption("Movie nights", "movie", "Movie nights taking place on this server"),
+                    SelectOption("Fourth year", "year4", "Game nights taking place on this server"),
+                    SelectOption("Server updates", "server-updates", "General announcements regarding the server (updates, maintenance, etc.)"),
+                    SelectOption("Remove all notification roles", "remove-notifications", "Overwrites all other options.")
+                ]
+            )
+        ]
+    )
+    notificationMsg2 = await ctx.send("You can also use the command `.notify <role>` to manually add the roles. To remove a year role use `.unnotify <role>`, or de-select it in the menu above.\n*By default, all users will have the announcements role. Use `.unnotify announcements` or the \"Remove all notification roles\" option above to opt out.*")
 
+
+    #Colour role
+    colourMsg = await ctx.send(
+        "**~**\n\n__**Colour roles:**__ \nWant to change the colour of your name on the server?\nSelect one of the following!",
+        components=[
+            SelectMenu(
+                custom_id="colours",
+                placeholder="Choose 1 option",
+                max_values=1,
+                options=[
+                    SelectOption("Purple", "purple", "Set the colour of your name to purple!", "🍇"),
+                    SelectOption("Red", "red", "Set the colour of your name to red!","❤️"),
+                    SelectOption("Yellow", "yellow", "Set the colour of your name to yellow!","🍋"),
+                    SelectOption("Aqua", "aqua", "Set the colour of your name to aqua!","💎"),
+                    SelectOption("Pink", "pink", "Set the colour of your name to pink!","🍑"),
+                    SelectOption("Orange", "orange", "Set the colour of your name to orange!","🟠"),
+                    SelectOption("Lime", "lime", "Set the colour of your name to lime!","🟢"),
+                    SelectOption("Green", "green", "Set the colour of your name to green!","🐍"),
+                    SelectOption("Blue", "blue", "Set the colour of your name to blue!","🆒"),
+                    SelectOption("Gold", "gold", "Set the colour of your name to gold!","💰"),
+                    SelectOption("Black", "black", "Set the colour of your name to black!","🖤"),
+                    SelectOption("No colour", "none", "Remove any colour from your name.","❌")
+                ]
+            )
+        ]
+    )
+    colourMsg2 = await ctx.send("You can also use the command `.iam <colour>` to set your colour.\nUse `.iamnot <colour>`, `.iamn <colour>` or select the \"No colour\" option in the menu above to remove your colour. If you want to suggest a colour, share it in #suggestions-and-feedback!")
+
+    await ctx.send("**~**\n\nTo receive any of the above roles, you must have the either the student or alumni role. Unless you joined through an event invite, it should be given to you shortly after you join. Let us know if you should have it but don't!")
 
 
 #TEMP because google is mean:
