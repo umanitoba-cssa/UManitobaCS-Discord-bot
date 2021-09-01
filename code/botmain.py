@@ -1063,7 +1063,7 @@ async def setupRolesChannel(ctx, *, args=None):
 
     #Channel access roles 
     yearMsg = await ctx.send(
-        "\n__**Year roles:**__ \nWant access to text channels related to the COMP classes you are in?\nSelect any of the following!",
+        "\n__**Channel Access roles:**__ \nWant access to text channels related to the COMP classes you are in?\nSelect any of the following!",
         components=[
             SelectMenu(
                 custom_id="years",
@@ -1075,6 +1075,7 @@ async def setupRolesChannel(ctx, *, args=None):
                     SelectOption("Second year", "year2", "Gain access to COMP 2xxx channels","2️⃣"),
                     SelectOption("Third year", "year3", "Gain access to COMP 3xxx channels","3️⃣"),
                     SelectOption("Fourth year", "year4", "Gain access to COMP 4xxx channels","4️⃣"),
+                    SelectOption("Co-op", "coop", "Gain access to channels related to the CS co-op program","🖥️"),
                     SelectOption("Remove all years", "remove-years", "Remove all year roles. Overwrites all other options.", "❌")
                 ]
             )
