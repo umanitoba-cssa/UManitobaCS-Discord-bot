@@ -277,8 +277,9 @@ async def on_member_join(member):
     '''
     db = dbClient["csDiscord"]
 
-    #delete last greet message 
 
+    '''
+    #delete last greet message 
     class GreetMsg:
         def __init__(self,id):
             self.messageId = id
@@ -312,6 +313,8 @@ async def on_member_join(member):
     collection = db["lastGreetMsg"]
     dict = vars(GreetMsg(newGreeting.id))
     collection.insert_one(dict)
+    '''
+
 
     usedInvite = utils.Invite
     inviteFound = False
@@ -324,34 +327,35 @@ async def on_member_join(member):
                     inviteFound = True
                     break
 
-    print("Assigning roles for " + member.name)
-    for role in usedInvite.autoAssignRoles:
-        roleName = 0
-
-        if(role == "CSSA Events"):
-            roleName = "cssa"
-        elif(role == "WICS Events"):
-            roleName = "wics"
-        elif(role == ".devclub Events"):
-            roleName = "devclub"
-        elif(role == "Movie nights"):
-            roleName = "movie-night"
-        elif(role == "Game nights"):
-            roleName = "game-night"
-        elif(role == "Student"):
-            roleName = role
-        elif(role == "Alumni"):
-            roleName = role
-
-        if(roleName != 0):
-            autoRole = discord.utils.get(guild.roles, name=roleName)
-            print(autoRole.name + " assigned")
-            await member.add_roles(autoRole)
-        else:
-            print("ERROR: " + role + " not found in server")
-    
-    #add the announcement role no matter what (if an invite was used)
     if(inviteFound):
+        print("Assigning roles for " + member.name)
+        for role in usedInvite.autoAssignRoles:
+            roleName = 0
+
+            if(role == "CSSA Events"):
+                roleName = "cssa"
+            elif(role == "WICS Events"):
+                roleName = "wics"
+            elif(role == ".devclub Events"):
+                roleName = "devclub"
+            elif(role == "Movie nights"):
+                roleName = "movie-night"
+            elif(role == "Game nights"):
+                roleName = "game-night"
+            elif(role == "Student"):
+                roleName = role
+            elif(role == "Alumni"):
+                roleName = role
+
+            if(roleName != 0):
+                autoRole = discord.utils.get(guild.roles, name=roleName)
+                print(autoRole.name + " assigned")
+                await member.add_roles(autoRole)
+            else:
+                print("ERROR: " + role + " not found in server")
+        
+        #add the announcement role no matter what (if an invite was used)
+    
         autoRole = discord.utils.get(guild.roles, name="announcements")
         print(autoRole.name + " assigned")
         await member.add_roles(autoRole)
@@ -368,8 +372,14 @@ async def on_member_join(member):
 
         server.invites.remove(usedInvite)
 
+        await channel.send(server.greetMessage.replace("<nl>","\n").replace("<user>",member.mention))
+
     else:
-        print("Invalid invite used for user" + member.mention)
+        print("Invalid invite used for user" + member.mention + " adding unregistered role.")
+        unRegistered = discord.utils.get(guild.roles, name="unregistered")
+        print(unRegistered.name + " assigned to " + member.mention)
+        await member.add_roles(unRegistered)
+
 
     global userHistoryList
 
