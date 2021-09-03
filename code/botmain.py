@@ -475,8 +475,111 @@ async def on_message_delete(message):
 
 @bot.event
 async def on_dropdown(inter):
-    labels = [option.label for option in inter.select_menu.selected_options]
-    await inter.reply(f"Options: {', '.join(labels)}")
+    member = discord.utils.get(inter.guild.members, id=inter.author.id)
+
+    if(inter.select_menu.custom_id == "notifications"):
+        rolesToAdd = []
+        rolesToRemove = []
+        removeAllRoles = False
+
+        for option in inter.select_menu.options:
+            role = discord.utils.get(inter.guild.roles, name=option.value)
+
+            if(option in inter.select_menu.selected_options):
+
+                if(option.value == "remove-notifications"):
+                    removeAllRoles = True
+                else:
+                    rolesToAdd.append(role)
+                
+            elif(role in member.roles):
+                #if it was not selected and they have it, remove it.
+                rolesToRemove.append(role)
+              
+        if(removeAllRoles):
+            roles = []
+            roles.append(discord.utils.get(inter.guild.roles, name="announcements"))
+            roles.append(discord.utils.get(inter.guild.roles, name="cssa"))
+            roles.append(discord.utils.get(inter.guild.roles, name="wics"))
+            roles.append(discord.utils.get(inter.guild.roles, name="devclub"))
+            roles.append(discord.utils.get(inter.guild.roles, name="movie-night"))
+            roles.append(discord.utils.get(inter.guild.roles, name="game-night"))
+            roles.append(discord.utils.get(inter.guild.roles, name="server-updates"))
+            await member.remove_roles(roles)
+        else:
+            await member.add_roles(rolesToAdd)
+            await member.remove_roles(rolesToRemove)
+
+
+    elif(inter.select_menu.custom_id == "channels"):
+        rolesToAdd = []
+        rolesToRemove = []
+        removeAllRoles = False
+
+        for option in inter.select_menu.options:
+            role = discord.utils.get(inter.guild.roles, name=option.value)
+
+            if(option in inter.select_menu.selected_options):
+
+                if(option.value == "remove-roles"):
+                    removeAllRoles = True
+                else:
+                    rolesToAdd.append(role)
+                
+            elif(role in member.roles):
+                #if it was not selected and they have it, remove it.
+                rolesToRemove.append(role)
+     
+        if(removeAllRoles):
+            roles = []
+            roles.append(discord.utils.get(inter.guild.roles, name="First Year"))
+            roles.append(discord.utils.get(inter.guild.roles, name="Second Year"))
+            roles.append(discord.utils.get(inter.guild.roles, name="Third Year"))
+            roles.append(discord.utils.get(inter.guild.roles, name="Fourth Year"))
+            roles.append(discord.utils.get(inter.guild.roles, name="Tenth Year"))
+            roles.append(discord.utils.get(inter.guild.roles, name="coop"))
+            await member.remove_roles(roles)
+        else:
+            await member.add_roles(rolesToAdd)
+            await member.remove_roles(rolesToRemove)
+
+
+    elif(inter.select_menu.custom_id == "colour"):
+        rolesToAdd = []
+        rolesToRemove = []
+        removeAllRoles = False
+
+        for option in inter.select_menu.options:
+            role = discord.utils.get(inter.guild.roles, name=option.value)
+
+            if(option in inter.select_menu.selected_options):
+
+                if(option.value == "remove-roles"):
+                    removeAllRoles = True
+                else:
+                    rolesToAdd.append(role)
+                
+            elif(role in member.roles):
+                #if it was not selected and they have it, remove it.
+                rolesToRemove.append(role)
+     
+        if(removeAllRoles):
+            roles = []
+            roles.append(discord.utils.get(inter.guild.roles, name="purple"))
+            roles.append(discord.utils.get(inter.guild.roles, name="red"))
+            roles.append(discord.utils.get(inter.guild.roles, name="yellow"))
+            roles.append(discord.utils.get(inter.guild.roles, name="aqua"))
+            roles.append(discord.utils.get(inter.guild.roles, name="pink"))
+            roles.append(discord.utils.get(inter.guild.roles, name="lime"))
+            roles.append(discord.utils.get(inter.guild.roles, name="green"))
+            roles.append(discord.utils.get(inter.guild.roles, name="blue"))
+            roles.append(discord.utils.get(inter.guild.roles, name="gold"))
+            roles.append(discord.utils.get(inter.guild.roles, name="black"))
+            roles.append(discord.utils.get(inter.guild.roles, name="orange"))
+            await member.remove_roles(roles)
+        else:
+            await member.add_roles(rolesToAdd)
+            await member.remove_roles(rolesToRemove)
 
 
 #### Commands ####
@@ -1066,17 +1169,17 @@ async def setupRolesChannel(ctx, *, args=None):
         "\n__**Channel Access roles:**__ \nWant access to text channels related to the COMP classes you are in?\nSelect any of the following!",
         components=[
             SelectMenu(
-                custom_id="years",
+                custom_id="channels",
                 placeholder="Choose as many options as you like",
-                max_values=4,
+                max_values=5,
                 min_values=0,
                 options=[
-                    SelectOption("First year", "year1", "Gain access to COMP 1xxx channels","1️⃣"),
-                    SelectOption("Second year", "year2", "Gain access to COMP 2xxx channels","2️⃣"),
-                    SelectOption("Third year", "year3", "Gain access to COMP 3xxx channels","3️⃣"),
-                    SelectOption("Fourth year", "year4", "Gain access to COMP 4xxx channels","4️⃣"),
+                    SelectOption("First year", "First Year", "Gain access to COMP 1xxx channels","1️⃣"),
+                    SelectOption("Second year", "Second Year", "Gain access to COMP 2xxx channels","2️⃣"),
+                    SelectOption("Third year", "Third Year", "Gain access to COMP 3xxx channels","3️⃣"),
+                    SelectOption("Fourth year", "Fourth Year", "Gain access to COMP 4xxx channels","4️⃣"),
                     SelectOption("Co-op", "coop", "Gain access to channels related to the CS co-op program","🖥️"),
-                    SelectOption("Remove all years", "remove-years", "Remove all year roles. Overwrites all other options.", "❌")
+                    SelectOption("Remove all years", "remove-roles", "Remove all year roles. Overwrites all other options.", "❌")
                 ]
             )
         ]
@@ -1098,8 +1201,8 @@ async def setupRolesChannel(ctx, *, args=None):
                     SelectOption("CSSA", "cssa", "Announcements from the CSSA"),
                     SelectOption("WICS", "wics", "Announcements from WICS"),
                     SelectOption(".devclub", "devclub", "Announcements from .devclub"),
-                    SelectOption("Movie nights", "movie", "Movie nights taking place on this server"),
-                    SelectOption("Fourth year", "year4", "Game nights taking place on this server"),
+                    SelectOption("Movie nights", "movie-night", "Movie nights taking place on this server"),
+                    SelectOption("Game nights", "game-night", "Game nights taking place on this server"),
                     SelectOption("Server updates", "server-updates", "General announcements regarding the server (updates, maintenance, etc.)"),
                     SelectOption("Remove all notification roles", "remove-notifications", "Overwrites all other options.")
                 ]
@@ -1114,7 +1217,7 @@ async def setupRolesChannel(ctx, *, args=None):
         "**~**\n\n__**Colour roles:**__ \nWant to change the colour of your name on the server?\nSelect one of the following!",
         components=[
             SelectMenu(
-                custom_id="colours",
+                custom_id="colour",
                 placeholder="Choose 1 option",
                 max_values=1,
                 options=[
@@ -1129,7 +1232,7 @@ async def setupRolesChannel(ctx, *, args=None):
                     SelectOption("Blue", "blue", "Set the colour of your name to blue!","🆒"),
                     SelectOption("Gold", "gold", "Set the colour of your name to gold!","💰"),
                     SelectOption("Black", "black", "Set the colour of your name to black!","🖤"),
-                    SelectOption("No colour", "none", "Remove any colour from your name.","❌")
+                    SelectOption("No colour", "remove-colour", "Remove any colour from your name.","❌")
                 ]
             )
         ]
