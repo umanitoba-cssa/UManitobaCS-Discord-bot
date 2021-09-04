@@ -263,6 +263,8 @@ async def on_member_join(member):
     #db
     db = dbClient["csDiscord"]
 
+
+    '''
     #delete last greet message 
     class GreetMsg:
         def __init__(self,id):
@@ -297,6 +299,8 @@ async def on_member_join(member):
     collection = db["lastGreetMsg"]
     dict = vars(GreetMsg(newGreeting.id))
     collection.insert_one(dict)
+    '''
+
 
 
     usedInvite = utils.Invite
@@ -310,34 +314,35 @@ async def on_member_join(member):
                     inviteFound = True
                     break
 
-    print("Assigning roles for " + member.name)
-    for role in usedInvite.autoAssignRoles:
-        roleName = 0
-
-        if(role == "CSSA Events"):
-            roleName = "cssa"
-        elif(role == "WICS Events"):
-            roleName = "wics"
-        elif(role == ".devclub Events"):
-            roleName = "devclub"
-        elif(role == "Movie nights"):
-            roleName = "movie-night"
-        elif(role == "Game nights"):
-            roleName = "game-night"
-        elif(role == "Student"):
-            roleName = role
-        elif(role == "Alumni"):
-            roleName = role
-
-        if(roleName != 0):
-            autoRole = discord.utils.get(guild.roles, name=roleName)
-            print(autoRole.name + " assigned")
-            await member.add_roles(autoRole)
-        else:
-            print("ERROR: " + role + " not found in server")
-    
-    #add the announcement role no matter what (if an invite was used)
     if(inviteFound):
+        print("Assigning roles for " + member.name)
+        for role in usedInvite.autoAssignRoles:
+            roleName = 0
+
+            if(role == "CSSA Events"):
+                roleName = "cssa"
+            elif(role == "WICS Events"):
+                roleName = "wics"
+            elif(role == ".devclub Events"):
+                roleName = "devclub"
+            elif(role == "Movie nights"):
+                roleName = "movie-night"
+            elif(role == "Game nights"):
+                roleName = "game-night"
+            elif(role == "Student"):
+                roleName = role
+            elif(role == "Alumni"):
+                roleName = role
+
+            if(roleName != 0):
+                autoRole = discord.utils.get(guild.roles, name=roleName)
+                print(autoRole.name + " assigned")
+                await member.add_roles(autoRole)
+            else:
+                print("ERROR: " + role + " not found in server")
+        
+        #add the announcement role no matter what (if an invite was used)
+    
         autoRole = discord.utils.get(guild.roles, name="announcements")
         print(autoRole.name + " assigned")
         await member.add_roles(autoRole)
@@ -354,8 +359,14 @@ async def on_member_join(member):
 
         server.invites.remove(usedInvite)
 
+        await channel.send(server.greetMessage.replace("<nl>","\n").replace("<user>",member.mention))
+
     else:
-        print("Invalid invite used for user" + member.mention)
+        print("Invalid invite used for user" + member.mention + " adding unregistered role.")
+        unRegistered = discord.utils.get(guild.roles, name="unregistered")
+        print(unRegistered.name + " assigned to " + member.mention)
+        await member.add_roles(unRegistered)
+
 
     global userHistoryList
 
@@ -482,6 +493,9 @@ async def on_dropdown(inter):
         rolesToRemove = []
         removeAllRoles = False
 
+        labels = [option.label for option in inter.select_menu.selected_options]
+        await inter.reply(f"Setting the following notification roles: {', '.join(labels)}", ephemeral=True)
+
         for option in inter.select_menu.options:
             role = discord.utils.get(inter.guild.roles, name=option.value)
 
@@ -505,16 +519,23 @@ async def on_dropdown(inter):
             roles.append(discord.utils.get(inter.guild.roles, name="movie-night"))
             roles.append(discord.utils.get(inter.guild.roles, name="game-night"))
             roles.append(discord.utils.get(inter.guild.roles, name="server-updates"))
-            await member.remove_roles(roles)
+
+            for role in roles:
+                await member.remove_roles(role)
         else:
-            await member.add_roles(rolesToAdd)
-            await member.remove_roles(rolesToRemove)
+            for role in rolesToAdd:
+                await member.add_roles(role)
+            for role in rolesToRemove:
+                await member.remove_roles(role)
 
 
     elif(inter.select_menu.custom_id == "channels"):
         rolesToAdd = []
         rolesToRemove = []
         removeAllRoles = False
+
+        labels = [option.label for option in inter.select_menu.selected_options]
+        await inter.reply(f"Setting the following channel access roles: {', '.join(labels)}", ephemeral=True)
 
         for option in inter.select_menu.options:
             role = discord.utils.get(inter.guild.roles, name=option.value)
@@ -538,10 +559,14 @@ async def on_dropdown(inter):
             roles.append(discord.utils.get(inter.guild.roles, name="Fourth Year"))
             roles.append(discord.utils.get(inter.guild.roles, name="Tenth Year"))
             roles.append(discord.utils.get(inter.guild.roles, name="coop"))
-            await member.remove_roles(roles)
+            
+            for role in roles:
+                await member.remove_roles(role)
         else:
-            await member.add_roles(rolesToAdd)
-            await member.remove_roles(rolesToRemove)
+            for role in rolesToAdd:
+                await member.add_roles(role)
+            for role in rolesToRemove:
+                await member.remove_roles(role)
 
 
     elif(inter.select_menu.custom_id == "colour"):
@@ -549,37 +574,40 @@ async def on_dropdown(inter):
         rolesToRemove = []
         removeAllRoles = False
 
+        labels = [option.label for option in inter.select_menu.selected_options]
+        await inter.reply(f"Setting your colour to: {', '.join(labels)}\n*note: it may take a moment to apply.*", ephemeral=True)
+
+        #remove all colours first
+        roles = []
+        roles.append(discord.utils.get(inter.guild.roles, name="purple"))
+        roles.append(discord.utils.get(inter.guild.roles, name="red"))
+        roles.append(discord.utils.get(inter.guild.roles, name="yellow"))
+        roles.append(discord.utils.get(inter.guild.roles, name="aqua"))
+        roles.append(discord.utils.get(inter.guild.roles, name="pink"))
+        roles.append(discord.utils.get(inter.guild.roles, name="lime"))
+        roles.append(discord.utils.get(inter.guild.roles, name="green"))
+        roles.append(discord.utils.get(inter.guild.roles, name="blue"))
+        roles.append(discord.utils.get(inter.guild.roles, name="gold"))
+        roles.append(discord.utils.get(inter.guild.roles, name="black"))
+        roles.append(discord.utils.get(inter.guild.roles, name="orange"))
+            
+        for i in roles:
+            await member.remove_roles(i)
+        
         for option in inter.select_menu.options:
             role = discord.utils.get(inter.guild.roles, name=option.value)
-
+            
             if(option in inter.select_menu.selected_options):
 
                 if(option.value == "remove-roles"):
                     removeAllRoles = True
                 else:
                     rolesToAdd.append(role)
-                
-            elif(role in member.roles):
-                #if it was not selected and they have it, remove it.
-                rolesToRemove.append(role)
      
-        if(removeAllRoles):
-            roles = []
-            roles.append(discord.utils.get(inter.guild.roles, name="purple"))
-            roles.append(discord.utils.get(inter.guild.roles, name="red"))
-            roles.append(discord.utils.get(inter.guild.roles, name="yellow"))
-            roles.append(discord.utils.get(inter.guild.roles, name="aqua"))
-            roles.append(discord.utils.get(inter.guild.roles, name="pink"))
-            roles.append(discord.utils.get(inter.guild.roles, name="lime"))
-            roles.append(discord.utils.get(inter.guild.roles, name="green"))
-            roles.append(discord.utils.get(inter.guild.roles, name="blue"))
-            roles.append(discord.utils.get(inter.guild.roles, name="gold"))
-            roles.append(discord.utils.get(inter.guild.roles, name="black"))
-            roles.append(discord.utils.get(inter.guild.roles, name="orange"))
-            await member.remove_roles(roles)
-        else:
-            await member.add_roles(rolesToAdd)
-            await member.remove_roles(rolesToRemove)
+        if(not removeAllRoles):
+            for role in rolesToAdd:
+                await member.add_roles(role)
+
 
 
 #### Commands ####
@@ -1165,7 +1193,7 @@ async def setupRolesChannel(ctx, *, args=None):
     text_channel = discord.utils.get(ctx.guild.channels, name=args)
 
     #Channel access roles 
-    yearMsg = await ctx.send(
+    yearMsg = await text_channel.send(
         "\n__**Channel Access roles:**__ \nWant access to text channels related to the COMP classes you are in?\nSelect any of the following!",
         components=[
             SelectMenu(
@@ -1184,17 +1212,17 @@ async def setupRolesChannel(ctx, *, args=None):
             )
         ]
     )
-    yearMsg2 = await ctx.send("You can also use the command `.iam <first/second/etc..> year` to manually add the roles. To remove a year role use `.iamn <year>`, `.iamnot <year>`, or de-select it in the menu above.\n*Note: Course specific channels only exist for courses that are being taught in the current term.*")
+    yearMsg2 = await text_channel.send("You can also use the command `.iam <first/second/etc..> year` to manually add the roles. To remove a year role use `.iamn <year>`, `.iamnot <year>`, or de-select it in the menu above.\n*Note: Course specific channels only exist for courses that are being taught in the current term.*")
 
 
     #Notification roles
-    notificationMsg = await ctx.send(
+    notificationMsg = await text_channel.send(
         "**~**\n\n__**Notification roles:**__ \nSelect what you would like to receive notifications about on the server!",
         components=[
             SelectMenu(
                 custom_id="notifications",
                 placeholder="Choose as many options as you like",
-                max_values=6,
+                max_values=7,
                 min_values=0,
                 options=[
                     SelectOption("Announcements", "announcements", "Server-wide announcements"),
@@ -1209,11 +1237,11 @@ async def setupRolesChannel(ctx, *, args=None):
             )
         ]
     )
-    notificationMsg2 = await ctx.send("You can also use the command `.notify <role>` to manually add the roles. To remove a year role use `.unnotify <role>`, or de-select it in the menu above.\n*By default, all users will have the announcements role. Use `.unnotify announcements` or the \"Remove all notification roles\" option above to opt out.*")
+    notificationMsg2 = await text_channel.send("You can also use the command `.notify <role>` to manually add the roles. To remove a year role use `.unnotify <role>`, or de-select it in the menu above.\n*By default, all users will have the announcements role. Use `.unnotify announcements` or the \"Remove all notification roles\" option above to opt out.*")
 
 
     #Colour role
-    colourMsg = await ctx.send(
+    colourMsg = await text_channel.send(
         "**~**\n\n__**Colour roles:**__ \nWant to change the colour of your name on the server?\nSelect one of the following!",
         components=[
             SelectMenu(
@@ -1237,9 +1265,9 @@ async def setupRolesChannel(ctx, *, args=None):
             )
         ]
     )
-    colourMsg2 = await ctx.send("You can also use the command `.iam <colour>` to set your colour.\nUse `.iamnot <colour>`, `.iamn <colour>` or select the \"No colour\" option in the menu above to remove your colour. If you want to suggest a colour, share it in #suggestions-and-feedback!")
+    colourMsg2 = await text_channel.send("You can also use the command `.iam <colour>` to set your colour.\nUse `.iamnot <colour>`, `.iamn <colour>` or select the \"No colour\" option in the menu above to remove your colour. If you want to suggest a colour, share it in #suggestions-and-feedback!")
 
-    await ctx.send("**~**\n\nTo receive any of the above roles, you must have the either the student or alumni role. Unless you joined through an event invite, it should be given to you shortly after you join. Let us know if you should have it but don't!")
+    await text_channel.send("**~**\n\nTo receive any of the above roles, you must have the either the student or alumni role. Unless you joined through an event invite, it should be given to you shortly after you join. Let us know if you should have it but don't!")
 
 
 #TEMP because google is mean:
