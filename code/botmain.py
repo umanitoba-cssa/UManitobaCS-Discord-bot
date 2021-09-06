@@ -10,7 +10,7 @@ from pymongo.database import Database
 #Google api stuff
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-#Email stuff
+
 from difflib import SequenceMatcher
 
 #slash/buttons
@@ -204,7 +204,7 @@ def getServer(ctx):
     else:
         return -1
 
-'''
+
 def checkForum(server, forced): 
     if(server.displayName == "UManitoba Computer Science Lounge" or forced):
         if(server.formLastChecked == 0 or time.time() - server.formLastChecked > 43200*2 or forced): 
@@ -217,14 +217,14 @@ def checkForum(server, forced):
             creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
             client = gspread.authorize(creds)
 
-            responsesSheet = client.open("Responses to discord signup").sheet1
+            responsesSheet = client.open("UManitoba Computer Science Discord Signup (Responses)").sheet1
 
             names = responsesSheet.col_values(2)
             lastIndex = len(responsesSheet.col_values(8))
 
             return len(names) - lastIndex
     return 0
-'''
+
 
 #Start bot
 intent = discord.Intents(messages=True, members=True, guilds=True, reactions=True, voice_states=True)
@@ -240,12 +240,13 @@ async def on_ready():
     for guild in bot.guilds:
         if(guild.name == "UManitoba Computer Science Lounge"):
             server = readInData("csDiscord")
-        else:
-            server = readInData(guild.name.replace(" ","-"))
 
 
 @bot.event
 async def on_member_join(member):
+
+    if(not member.guild.name == "UManitoba Computer Science Lounge"):
+        return
 
     global dbClient
 
@@ -383,6 +384,10 @@ async def on_member_join(member):
 #the following two events are very similar, the only difference being a username change or a nickname change
 @bot.event
 async def on_member_update(before, after):
+
+    if(not before.guild.name == "UManitoba Computer Science Lounge"):
+        return
+
     global userHistoryList
 
     server = utils.Server
@@ -417,6 +422,10 @@ async def on_member_update(before, after):
 #contains temp DB fix, do not deploy to other servers with this change
 @bot.event
 async def on_user_update(before, after):
+
+    if(not before.guild.name == "UManitoba Computer Science Lounge"):
+        return
+
     global userHistoryList
 
     #if a username was changed
@@ -443,6 +452,10 @@ async def on_user_update(before, after):
 
 @bot.event
 async def on_reaction_add(reaction, user):
+
+    if(not reaction.message.guild.name == "UManitoba Computer Science Lounge"):
+        return
+
     #print(user.display_name + " sent a reaction")
     global reactionMessages
 
@@ -456,6 +469,10 @@ async def on_reaction_add(reaction, user):
 
 @bot.event
 async def on_reaction_remove(reaction, user):
+
+    if(not reaction.message.guild.name == "UManitoba Computer Science Lounge"):
+        return
+
     #print(user.display_name + " sent a reaction")
     global reactionMessages
 
@@ -469,6 +486,10 @@ async def on_reaction_remove(reaction, user):
 
 @bot.event
 async def on_message_delete(message):
+
+    if(not message.guild.name == "UManitoba Computer Science Lounge"):
+        return
+
     global reactionMessages
     global dbClient
     db = dbClient["csDiscord"]
@@ -486,6 +507,10 @@ async def on_message_delete(message):
 
 @bot.event
 async def on_dropdown(inter):
+
+    if(not inter.guild.name == "UManitoba Computer Science Lounge"):
+        return
+
     member = discord.utils.get(inter.guild.members, id=inter.author.id)
 
     if(inter.select_menu.custom_id == "notifications"):
@@ -619,10 +644,14 @@ async def test(ctx, *, args=None):
     #send the arguments of the command back to the user
     await ctx.send(''.join(args))
 
-'''
+
 #forcibly check for forum responses
 @bot.command()
 async def forcecheck(ctx, *args):
+
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
 
     if(not hasPermission(ctx,"admin")):
         await ctx.send("Error: You do not have permission to use this command.")
@@ -633,7 +662,7 @@ async def forcecheck(ctx, *args):
         await ctx.send("There are no new form responses.")
     else:
         await ctx.send("There are `" + str(responses) + "` new form responses.")
-
+'''
 @bot.command()
 async def handleresponses(ctx, *args):
 
@@ -726,6 +755,10 @@ async def handleresponses(ctx, *args):
 @bot.command()
 async def iam(ctx, *args):
 
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     server = getServer(ctx)
 
     if hasPermission(ctx,"registered"):
@@ -778,6 +811,11 @@ async def iamnot(ctx, *args):
 
 @bot.command()
 async def iamn(ctx, *args):
+
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     server = getServer(ctx)
 
     if hasPermission(ctx,"registered"):
@@ -824,6 +862,11 @@ async def iamn(ctx, *args):
 
 @bot.command()
 async def colour(ctx, *args):
+
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     server = getServer(ctx)
     global dbClient
     if(server.displayName == "UManitoba Computer Science Lounge"):
@@ -896,6 +939,11 @@ async def colour(ctx, *args):
 
 @bot.command()
 async def notify(ctx, *args):
+
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     server = getServer(ctx)
 
     if(not hasPermission(ctx,"registered")):
@@ -939,6 +987,11 @@ async def notify(ctx, *args):
 
 @bot.command()
 async def unnotify(ctx, *args):
+
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     server = getServer(ctx)
 
     if(not hasPermission(ctx,"registered")):
@@ -982,6 +1035,11 @@ async def unnotify(ctx, *args):
 
 @bot.command()
 async def setgreetmessage(ctx, *, arg): 
+
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     server = getServer(ctx)
     global dbClient
     db = dbClient[server.displayName]
@@ -1001,6 +1059,11 @@ async def setgreetmessage(ctx, *, arg):
 
 @setgreetmessage.error
 async def setgreetmessage_error(ctx, error):
+
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     server = getServer(ctx)
     global dbClient
     db = dbClient[server.displayName]
@@ -1019,6 +1082,11 @@ async def setgreetmessage_error(ctx, error):
 
 @bot.command()
 async def autoassignrole(ctx,*args):
+
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     server = getServer(ctx)
 
     if(not hasPermission(ctx, "admin")):
@@ -1041,6 +1109,10 @@ bot.remove_command("help")
 @bot.command()
 async def help(ctx,*args):
 
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     if(len(args) != 0):
         if(args[0] == "admin"):
             if(hasPermission(ctx, "admin")):
@@ -1060,33 +1132,21 @@ async def help(ctx,*args):
 
 
 @bot.command()
-async def cssa(ctx,*args):
-    file = open("templates/cssa.txt","r")
-    await ctx.send(file.read())
-    file.close()
-
-
-@bot.command()
-async def wics(ctx,*args): 
-    file = open("templates/wics.txt","r")
-    await ctx.send(file.read())
-    file.close()
-
-
-@bot.command()
-async def devclub(ctx,*args):
-    file = open("templates/devclub.txt","r")
-    await ctx.send(file.read())
-    file.close()
-
-
-@bot.command()
 async def form(ctx,*args):
+
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     await ctx.send("https://forms.gle/C11YVJDVW2DhcbjXA")
 
 
 @bot.command()
 async def history(ctx, *, args=None):
+
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
 
     if(not hasPermission(ctx, "admin")):
         await ctx.send("Error: You do not have permission to use this command.")
@@ -1148,6 +1208,11 @@ async def history(ctx, *, args=None):
 #send a message and give it a role assigning reaction
 @bot.command()
 async def reactionRole(ctx, *, args=None): 
+
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     server = getServer(ctx)
     global dbClient
     db = dbClient["csDiscord"]
@@ -1179,6 +1244,11 @@ async def reactionRole(ctx, *, args=None):
         
 @bot.command()
 async def setupRolesChannel(ctx, *, args=None): 
+
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     server = getServer(ctx)
     user = ctx.message.author
 
@@ -1274,6 +1344,10 @@ async def setupRolesChannel(ctx, *, args=None):
 @bot.command()
 async def genInvite(ctx, *, args=None):
 
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     if(not hasPermission(ctx, "admin")):
         await ctx.send("Error: You do not have permission to use this command.")
         return
@@ -1331,6 +1405,11 @@ async def genInvite(ctx, *, args=None):
 ##---------------Fun commands---------------
 @bot.command()
 async def sendmessage(ctx, *, arg): 
+
+    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
     server = getServer(ctx)
 
     if(not hasPermission(ctx, "admin")):
@@ -1361,61 +1440,59 @@ async def nothing(ctx,*args):
     pass
 
 
+##---------------Commands Enabled on other servers---------------
+
 @bot.command()
-async def button(ctx):
-    # Make a row of buttons
-    row_of_buttons = ActionRow(
-        Button(
-            style=ButtonStyle.green,
-            label="Green button",
-            custom_id="green"
-        ),
-        Button(
-            style=ButtonStyle.red,
-            label="Red button",
-            custom_id="test_button"
-        )
-    )
-    # Send a message with buttons
-    msg = await ctx.send(
-        "This message has buttons!",
-        components=[row_of_buttons]
-    )
-
-    on_click = msg.create_click_listener()
-
-    @on_click.matching_id("red")
-    async def on_test_button(inter):
-        await inter.reply("You've clicked the red button!")
-
-    @on_click.matching_id("green")
-    async def on_test_button(inter):
-        await inter.reply("You've clicked the green button!")
+async def cssa(ctx,*args):
+    file = open("templates/cssa.txt","r")
+    await ctx.send(file.read())
+    file.close()
 
 
 @bot.command()
-async def menu(ctx):
-    msg = await ctx.send(
-        "This message has a select menu!",
-        components=[
-            SelectMenu(
-                custom_id="test",
-                placeholder="Choose up to 2 options",
-                max_values=2,
-                options=[
-                    SelectOption("Option 1", "value 1"),
-                    SelectOption("Option 2", "value 2"),
-                    SelectOption("Option 3", "value 3")
-                ]
-            )
-        ]
-    )
-    # Wait for someone to click on it
-    inter = await msg.wait_for_dropdown()
-    # Send what you received
-    labels = [option.label for option in inter.select_menu.selected_options]
-    await inter.reply(f"Options: {', '.join(labels)}")
+async def wics(ctx,*args): 
+    file = open("templates/wics.txt","r")
+    await ctx.send(file.read())
+    file.close()
 
+
+@bot.command()
+async def devclub(ctx,*args):
+    file = open("templates/devclub.txt","r")
+    await ctx.send(file.read())
+    file.close()
+
+
+#permission check for external servers
+def hasExternalPermission(ctx):
+    role = discord.utils.get(ctx.message.guild.roles, name="admin")
+
+    if(role in ctx.message.author.roles):
+        return True
+    else:
+        return False
+
+@bot.command()
+async def generateInvites(ctx,*args):
+    #Generate the given number of invites for the server this command was run on.
+
+    if(not hasExternalPermission(ctx)):
+        await ctx.send("Error: You do not have permission to use this command.")
+        return
+
+    guild = ctx.message.guild
+    inviteChannel = discord.utils.get(guild.channels, name="introductions")
+
+    if(len(args) == 1):
+        inviteList = []
+        for i in range(int(args[0])):
+            invite = await inviteChannel.create_invite(max_uses=1, unique=True, reason="Created invite through bot.")
+            inviteList.append(invite.url)
+
+        await ctx.send("```Invites generated:\n" + "\n".join(inviteList) + "```")
+
+    else:
+        await ctx.send("Error: Exactly one argument (int) must be given.")
 
 
 bot.run(TOKEN)
