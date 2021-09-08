@@ -334,6 +334,18 @@ async def on_member_join(member):
                 roleName = role
             elif(role == "Alumni"):
                 roleName = role
+            elif(role == "First Year Classes"):
+                roleName = "First Year"
+            elif(role == "Second Year Classes"):
+                roleName = "Second Year"
+            elif(role == "Third Year Classes"):
+                roleName = "Third Year"
+            elif(role == "Fourth Year Classes"):
+                roleName = "Fourth Year"
+            elif(role == "Fourth Year classes"):#remove this later
+                roleName = "Fourth Year"
+            elif(role == "Co-op"):
+                roleName = "coop"
 
             if(roleName != 0):
                 autoRole = discord.utils.get(guild.roles, name=roleName)
@@ -423,8 +435,8 @@ async def on_member_update(before, after):
 @bot.event
 async def on_user_update(before, after):
 
-    if(not before.guild.name == "UManitoba Computer Science Lounge"):
-        return
+    #if(not before.guild.name == "UManitoba Computer Science Lounge"):
+        #return
 
     global userHistoryList
 
@@ -1340,9 +1352,8 @@ async def setupRolesChannel(ctx, *, args=None):
     await text_channel.send("**~**\n\nTo receive any of the above roles, you must have the either the student or alumni role. Unless you joined through an event invite, it should be given to you shortly after you join. Let us know if you should have it but don't!")
 
 
-#TEMP because google is mean:
 @bot.command()
-async def genInvite(ctx, *, args=None):
+async def genFormInvites(ctx, *, args=None):
 
     if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
         await ctx.send("Error: This command is not enabled on this server.")
@@ -1352,54 +1363,76 @@ async def genInvite(ctx, *, args=None):
         await ctx.send("Error: You do not have permission to use this command.")
         return
 
-    if(len(args) == 0):
-        await ctx.send("Error: Command arguments required")
-        return
-
     server = getServer(ctx)
     guild = discord.utils.get(bot.guilds, name=server.displayName)
     inviteChannel = discord.utils.get(guild.channels, name="introductions")
     global dbClient
-    if(server.displayName == "UManitoba Computer Science Lounge"):
-        db = dbClient["csDiscord"]
-    else:
-        db = dbClient[server.displayName]
+    db = dbClient["csDiscord"]
     collection = db["invites"]
 
-    args = ''.join(args)
+    responses = checkForum(server,True)
+    if(responses <= 0):
+        await ctx.send("There are no new form responses.")
+        return
 
-    arguments = args.replace(" ","").split(",")
-    for i in range(1,len(arguments)):
-        if(arguments[i] == 'cssa'):
-            arguments[i] = "CSSA Events"
-        elif(arguments[i] == 'wics'):
-            arguments[i] = "WICS Events"
-        elif(arguments[i] == 'dev'):
-            arguments[i] = ".devclub Events"
-        elif(arguments[i] == 'movie'):
-            arguments[i] = "Movie nights"
-        elif(arguments[i] == 'game'):
-            arguments[i] = "Game nights"
-        elif(arguments[i] == 'student'):
-            arguments[i] = "Student"
-        elif(arguments[i] == 'alum'):
-            arguments[i] = "Alumni"
+    await ctx.send(str(responses) + " new responses. Generating invites now...")
+    #open the responses spread-sheet
+    scope = ['https://spreadsheets.google.com/feeds',
+            'https://www.googleapis.com/auth/drive']
+    creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
+    client = gspread.authorize(creds)
+    responsesSheet = client.open("UManitoba Computer Science Discord Signup (Responses)").sheet1
 
-    #generate an invite link
-    newInvite = await inviteChannel.create_invite(max_uses=5, unique=True, reason="Created invite for user: " + arguments[0])
-    #generate a utils link to be saved server side
-    roles = arguments[1:]
-    invite = utils.Invite(newInvite.url,0,server.displayName,roles)
-    server.invites.append(invite)
-    #add it to the database
-    dict = vars(invite)
-    collection.insert_one(dict)
+    emails = responsesSheet.col_values(3)
+    names = responsesSheet.col_values(2)
+    rawChannelRoles = responsesSheet.col_values(6)
+    rawNotificationRoles = responsesSheet.col_values(7)
+    statusRole = responsesSheet.col_values(4)
+    index = len(responsesSheet.col_values(8)) + 1 #the index of the first new response
 
-    roleString = ""
-    for x in roles:
-        roleString += x + "\n"
+    def checkEmail(email, currentIndex):
+        
+        if(not email.endswith("@myumanitoba.ca" or email.endswith("@learning.icmanitoba.ca"))):
+            return False
+        for i in range(currentIndex - 1):
+            if(email == emails[i]):
+                return False
+        return True
 
-    await ctx.send("Invite generated:``` " + arguments[0] + "\n" + invite.url + "\nRoles:\n" + roleString + "```")
+    for i in range(index, len(emails) + 1):
+
+        if(checkEmail(emails[i-1],i)):
+
+            channelRoles = rawChannelRoles[i-1].split(", ")
+            notificationRoles = rawNotificationRoles[i-1].split(", ")
+
+            roles = []
+            for j in channelRoles:
+                roles.append(j)
+            for j in notificationRoles:
+                roles.append(j)
+
+            roles.append(statusRole[i-1])
+
+            
+            #generate an invite link
+            newInvite = await inviteChannel.create_invite(max_uses=5, unique=True, reason="Created invite for user: " + responsesSheet.row_values(i)[1])
+            #generate a utils link to be saved server side
+            invite = utils.Invite(newInvite.url,0,server.displayName,roles)
+            server.invites.append(invite)
+            #add it to the database
+            dict = vars(invite)
+            collection.insert_one(dict)
+
+            roleString = ""
+            for x in roles:
+                roleString += x + "\n"
+
+            await ctx.send("```Name: " + names[i-1] + "\nEmail: " + emails[i-1] + "\nInvite: " + newInvite.url + "\nRoles:\n" + roleString + "```")
+
+            responsesSheet.update_cell(i,8,newInvite.url)
+        else:
+            responsesSheet.update_cell(i,8,"Flagged")
 
 
 ##---------------Fun commands---------------
