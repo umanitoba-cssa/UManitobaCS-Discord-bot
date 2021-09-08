@@ -326,6 +326,8 @@ async def on_member_join(member):
                 roleName = "wics"
             elif(role == ".devclub Events"):
                 roleName = "devclub"
+            elif(role == ".devClub Events"):#remove this later
+                roleName = "devclub"
             elif(role == "Movie nights"):
                 roleName = "movie-night"
             elif(role == "Game nights"):
