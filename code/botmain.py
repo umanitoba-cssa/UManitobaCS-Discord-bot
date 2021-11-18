@@ -718,6 +718,14 @@ async def iam(ctx, *args):
                         await ctx.send("`" + year + "` role added.")
                 else:
                     await ctx.send("Error: Correct format is `" + PREFIX + "iam " + args[0] + " year`.")
+
+            elif(args[0].lower() == "coop" or args[0].lower() == "co-op"):
+                if(discord.utils.get(ctx.message.guild.roles, name="coop") in user.roles):
+                        await ctx.send("Error: You already have the `coop` role.")
+                else:
+                    await user.add_roles(discord.utils.get(ctx.message.guild.roles, name="coop"))
+                    await ctx.send("`coop` role added.")
+
             else:
                 await ctx.send("Error: Year or colour role `" + args[0] + "` not found.")
         else:
