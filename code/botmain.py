@@ -781,6 +781,14 @@ async def iamn(ctx, *args):
                         await ctx.send("Error: You do not have the role `" + role.name + "`.")
                 else:
                     await ctx.send("Error: Correct format is `" + PREFIX + "iamn " + args[0] + " year`.")
+
+            elif(args[0].lower() == "coop" or args[0].lower() == "co-op"):
+                if(not discord.utils.get(ctx.message.guild.roles, name="coop") in user.roles):
+                        await ctx.send("Error: You do not have the `coop` role.")
+                else:
+                    await user.remove_roles(discord.utils.get(ctx.message.guild.roles, name="coop"))
+                    await ctx.send("`coop` role removed.")
+
             else:
                 await ctx.send("Error: Year or colour role `" + args[0] + "` not found.")
         else:
