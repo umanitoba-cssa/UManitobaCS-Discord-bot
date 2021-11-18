@@ -43,7 +43,7 @@ userHistoryList = []
 global isEmailEnabled
 isEmailEnabled = False
 
-dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority", ssl_cert_reqs=ssl.CERT_NONE)
+dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
 
 #read in data from db
 def readInData(serverName):
