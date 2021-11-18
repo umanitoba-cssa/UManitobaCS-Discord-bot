@@ -43,7 +43,7 @@ userHistoryList = []
 global isEmailEnabled
 isEmailEnabled = False
 
-dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
+dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority", ssl_cert_reqs=ssl.CERT_NONE)
 
 #read in data from db
 def readInData(serverName):
@@ -265,45 +265,6 @@ async def on_member_join(member):
     db = dbClient["csDiscord"]
 
 
-    '''
-    #delete last greet message 
-    class GreetMsg:
-        def __init__(self,id):
-            self.messageId = id
-    
-    greetingFound = False
-
-    newGreeting = discord.message
-    if(server.lastGreetingId != -1):
-        messages = await channel.history(limit=20).flatten()
-        for message in messages:
-            if(message.id == server.lastGreetingId):
-                await message.delete()
-                newGreeting = await channel.send(server.greetMessage.replace("<nl>","\n"))
-
-                collection = db["lastGreetMsg"]
-                dict = vars(GreetMsg(server.lastGreetingId))
-                collection.delete_one(dict)
-
-                server.lastGreetingId = newGreeting.id
-                greetingFound = True
-    
-    if(not greetingFound):
-        newGreeting = await channel.send(server.greetMessage.replace("<nl>","\n"))
-
-        collection = db["lastGreetMsg"]
-        dict = vars(GreetMsg(server.lastGreetingId))
-        collection.delete_one(dict)
-
-        server.lastGreetingId = newGreeting.id
-
-    collection = db["lastGreetMsg"]
-    dict = vars(GreetMsg(newGreeting.id))
-    collection.insert_one(dict)
-    '''
-
-
-
     usedInvite = utils.Invite
     inviteFound = False
     for i in guildInvites:
@@ -326,8 +287,6 @@ async def on_member_join(member):
                 roleName = "wics"
             elif(role == ".devclub Events"):
                 roleName = "devclub"
-            elif(role == ".devClub Events"):#remove this later
-                roleName = "devclub"
             elif(role == "Movie nights"):
                 roleName = "movie-night"
             elif(role == "Game nights"):
@@ -343,8 +302,6 @@ async def on_member_join(member):
             elif(role == "Third Year Classes"):
                 roleName = "Third Year"
             elif(role == "Fourth Year Classes"):
-                roleName = "Fourth Year"
-            elif(role == "Fourth Year classes"):#remove this later
                 roleName = "Fourth Year"
             elif(role == "Co-op"):
                 roleName = "coop"
@@ -374,7 +331,43 @@ async def on_member_join(member):
 
         server.invites.remove(usedInvite)
 
-        await channel.send(server.greetMessage.replace("<nl>","\n").replace("<user>",member.mention))
+        await channel.send("Welcome " + member.mention + "!")
+
+        #delete last greet message 
+        class GreetMsg:
+            def __init__(self,id):
+                self.messageId = id
+        
+        greetingFound = False
+
+        newGreeting = discord.message
+        if(server.lastGreetingId != -1):
+            messages = await channel.history(limit=20).flatten()
+            for message in messages:
+                if(message.id == server.lastGreetingId):
+                    await message.delete()
+                    newGreeting = await channel.send(server.greetMessage.replace("<nl>","\n"))
+
+                    collection = db["lastGreetMsg"]
+                    dict = vars(GreetMsg(server.lastGreetingId))
+                    collection.delete_one(dict)
+
+                    server.lastGreetingId = newGreeting.id
+                    greetingFound = True
+        
+        if(not greetingFound):
+            newGreeting = await channel.send(server.greetMessage.replace("<nl>","\n"))
+
+            collection = db["lastGreetMsg"]
+            dict = vars(GreetMsg(server.lastGreetingId))
+            collection.delete_one(dict)
+
+            server.lastGreetingId = newGreeting.id
+
+        collection = db["lastGreetMsg"]
+        dict = vars(GreetMsg(newGreeting.id))
+        collection.insert_one(dict)
+
 
     else:
         print("Invalid invite used for user" + member.mention + " adding unregistered role.")
@@ -676,95 +669,8 @@ async def forcecheck(ctx, *args):
         await ctx.send("There are no new form responses.")
     else:
         await ctx.send("There are `" + str(responses) + "` new form responses.")
-'''
-@bot.command()
-async def handleresponses(ctx, *args):
 
-    if(not hasPermission(ctx,"admin")):
-        await ctx.send("Error: You do not have permission to use this command.")
-        return
 
-    responses = checkForum(getServer(ctx),True)
-    if(responses <= 0):
-        await ctx.send("There are no new form responses.")
-    else:
-        await ctx.send("Generating invites...")
-
-        #open the responses spread-sheet
-        scope = ['https://spreadsheets.google.com/feeds',
-                        'https://www.googleapis.com/auth/drive']
-        creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
-        client = gspread.authorize(creds)
-        responsesSheet = client.open("Responses to discord signup").sheet1
-
-        emails = responsesSheet.col_values(3)
-        index = len(responsesSheet.col_values(8)) + 1 #the index of the first new response
-
-        flaggedResponses = []
-        validResponses = []
-
-        for i in range(responses):
-            currentIndex = index + i 
-            response = responsesSheet.row_values(currentIndex)
-            if(len(response) == 5):
-                response.append("")
-            flagged = False
-            #check if this is a duplicate response or if it uses an invalid email
-            for j in range(currentIndex - 1):
-                response[2] = response[2].lower().replace(" ","") #format the email
-                if(response[2] == emails[j] or not (response[2].endswith("@myumanitoba.ca" or response[2].endswith("@learning.icmanitoba.ca")))):
-                    flaggedResponses.append(response)
-                    flagged = True
-                    break
-            if(not flagged):
-                validResponses.append(response)
-
-        server = getServer(ctx)
-        guild = discord.utils.get(bot.guilds, name=server.displayName)
-        inviteChannel = discord.utils.get(guild.channels, name="introductions")
-        global dbClient
-        db = dbClient["csDiscord"]
-        collection = db["invites"]
-        global formattedEmails
-        formattedEmails.clear()
-
-        for response in validResponses:
-            #generate an invite link
-            newInvite = await inviteChannel.create_invite(max_uses=5, unique=True, reason="Created invite for user: " + response[4])
-            #generate a utils link to be saved server side
-            roles = response[5].split(", ")
-            roles.append(response[3])
-            invite = utils.Invite(newInvite.url,0,server.displayName,roles)
-            server.invites.append(invite)
-            #add it to the database
-            dict = vars(invite)
-            collection.insert_one(dict)
-
-            firstName = response[1].split(" ")[0].lower().capitalize()
-            formattedEmails.append(utils.Email(response[2],firstName,invite.url))
-
-        for response in flaggedResponses:
-            sheet_index = emails.index(response[2],index - 1) + 1
-            responsesSheet.update_cell(sheet_index,9,"FLAGGED")
-
-        if(len(validResponses) > 0):
-            await ctx.send("Emails generated.")
-            if(len(flaggedResponses) > 0):
-                await ctx.send("`" + str(len(flaggedResponses)) + "` invalid responses found.")
-
-            await ctx.send("Printing out formatted emails:")
-            for email in formattedEmails:
-                email.previewMessage = await ctx.send(str(email))
-                email.previewer = ctx.message.author
-
-                checkmark = "✔"
-                crossmark = "❌"
-                await email.previewMessage.add_reaction(checkmark)
-                await email.previewMessage.add_reaction(crossmark)
-        else:
-            await ctx.send("No valid responses found, no emails/invites were generated.")
-
-'''
 
 @bot.command()
 async def iam(ctx, *args):
