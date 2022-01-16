@@ -42,6 +42,8 @@ global userHistoryList
 userHistoryList = []
 global isEmailEnabled
 isEmailEnabled = False
+global channelRoles
+channelRoles = []
 
 dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
 
@@ -50,6 +52,18 @@ def readInData(serverName):
     
     if(serverName == "csDiscord"):
         server = utils.Server("UManitoba Computer Science Lounge")
+    elif(serverName == "game-jam"):
+        global dbClient
+        global channelRoles
+        db = dbClient["game-jam-2022"]
+        collection = db["channel_roles"]
+        rawValues = collection.find({},{"pairs"})
+        for x in rawValues:
+            channelRoles.append(x["pairs"])
+        print("\nChannel roles imported:")
+        for x in channelRoles:
+            print(x)
+
     else:
         server = utils.Server(serverName)
 
@@ -240,6 +254,8 @@ async def on_ready():
     for guild in bot.guilds:
         if(guild.name == "UManitoba Computer Science Lounge"):
             server = readInData("csDiscord")
+        if(guild.name == "CSSA Game Jam 2022"):
+            readInData("game-jam")
 
 
 @bot.event
@@ -640,7 +656,8 @@ async def on_dropdown(inter):
             for role in rolesToAdd:
                 await member.add_roles(role)
 
-## GAME JAM UPDATE ##
+
+##------------ GAME JAM UPDATE ------------##
 
 @bot.event
 async def on_voice_state_update(member,before,after):
@@ -655,6 +672,52 @@ async def on_voice_state_update(member,before,after):
             #add new role
             pass
     
+@bot.command()
+@commands.has_role('CSSA Execs')
+async def creategroup(ctx, *args):
+
+    if(not ctx.message.guild.name == "CSSA Game Jam 2022"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
+    if(len(args) == 2):
+        roleId = discord.utils.get(ctx.message.guild.roles, name=args[0].lower).id
+        channelId = discord.utils.get(ctx.message.guild.channels, name=args[1].lower).id
+    
+        global dbClient
+        global channelRoles
+        db = dbClient["game-jam-2022"]
+
+        collection = db["channel_roles"]
+        dict = { "pair": (channelId,roleId) }
+        collection.insert_one(dict)
+        channelRoles.append(dict)
+
+@bot.command()
+@commands.has_role('CSSA Execs')
+async def removegroup(ctx, *args):
+
+    if(not ctx.message.guild.name == "CSSA Game Jam 2022"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
+    if(len(args) == 1):
+        roleId = discord.utils.get(ctx.message.guild.roles, name=args[0].lower).id
+        channelId = ''
+        for pair in channelRoles:
+            if(pair["pair"][1] == roleId):
+                channelId = pair["pair"][0]
+            channelRoles.remove(pair)
+            break
+    
+        global dbClient
+        global channelRoles
+        db = dbClient["game-jam-2022"]
+
+        collection = db["channel_roles"]
+        dict = { "pair": (channelId,roleId) }
+        collection.delete_one(dict)
+
 
 #### Commands ####
 
