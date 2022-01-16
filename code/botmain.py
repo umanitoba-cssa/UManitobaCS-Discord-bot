@@ -640,7 +640,21 @@ async def on_dropdown(inter):
             for role in rolesToAdd:
                 await member.add_roles(role)
 
+## GAME JAM UPDATE ##
 
+@bot.event
+async def on_voice_state_update(member,before,after):
+
+    if(not member.guild.name == "CSSA Game Jam 2022"):
+        return
+
+    if(before != None):
+        #remove old role
+
+        if(after != None):
+            #add new role
+            pass
+    
 
 #### Commands ####
 
