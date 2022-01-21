@@ -59,9 +59,9 @@ def readInData(serverName):
         print("\nGame Jam server detected\n")
         db = dbClient["game-jam-2022"]
         collection = db["channel_roles"]
-        rawValues = collection.find({},{"pairs"})
+        rawValues = collection.find({},{"pair"})
         for x in rawValues:
-            channelRoles.append(x["pairs"])
+            channelRoles.append(x["pair"])
         print("\nChannel roles imported:")
         for x in channelRoles:
             print(x)
