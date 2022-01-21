@@ -45,18 +45,18 @@ isEmailEnabled = False
 global channelRoles
 channelRoles = []
 
-global dbClient
 dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
 
 #read in data from db
 def readInData(serverName):
     
+    global dbClient
+    global channelRoles
+
     if(serverName == "csDiscord"):
         server = utils.Server("UManitoba Computer Science Lounge")
     elif(serverName == "game-jam"):
         print("\nGame Jam server detected\n")
-        global dbClient
-        global channelRoles
         db = dbClient["game-jam-2022"]
         collection = db["channel_roles"]
         rawValues = collection.find({},{"pairs"})
@@ -68,9 +68,6 @@ def readInData(serverName):
         return
     else:
         server = utils.Server(serverName)
-
-    global dbClient
-    global userHistoryList
 
     db = dbClient[serverName]
 
