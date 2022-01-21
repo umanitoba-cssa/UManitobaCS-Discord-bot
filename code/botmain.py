@@ -674,6 +674,8 @@ async def on_voice_state_update(member,before,after):
 @bot.command()
 @commands.has_role('CSSA Execs')
 async def creategroup(ctx, *args):
+    global dbClient
+    global channelRoles
 
     if(not ctx.message.guild.name == "CSSA Game Jam 2022"):
         await ctx.send("Error: This command is not enabled on this server.")
@@ -682,9 +684,7 @@ async def creategroup(ctx, *args):
     if(len(args) == 2):
         roleId = discord.utils.get(ctx.message.guild.roles, name=args[0].lower).id
         channelId = discord.utils.get(ctx.message.guild.channels, name=args[1].lower).id
-    
-        global dbClient
-        global channelRoles
+        
         db = dbClient["game-jam-2022"]
 
         collection = db["channel_roles"]
@@ -695,6 +695,8 @@ async def creategroup(ctx, *args):
 @bot.command()
 @commands.has_role('CSSA Execs')
 async def removegroup(ctx, *args):
+    global dbClient
+    global channelRoles
 
     if(not ctx.message.guild.name == "CSSA Game Jam 2022"):
         await ctx.send("Error: This command is not enabled on this server.")
@@ -709,8 +711,6 @@ async def removegroup(ctx, *args):
             channelRoles.remove(pair)
             break
     
-        global dbClient
-        global channelRoles
         db = dbClient["game-jam-2022"]
 
         collection = db["channel_roles"]
