@@ -683,13 +683,8 @@ async def creategroup(ctx, *args):
 
     if(len(args) == 2):
 
-        for x in ctx.message.guild.roles:
-            print(x.name)
-
-        print("- ",args[0].lower)
-
-        roleId = discord.utils.get(ctx.message.guild.roles, name=args[0].lower).id
-        channelId = discord.utils.get(ctx.message.guild.channels, name=args[1].lower).id
+        roleId = discord.utils.get(ctx.message.guild.roles, name=args[0]).id
+        channelId = discord.utils.get(ctx.message.guild.channels, name=args[1]).id
 
         db = dbClient["game-jam-2022"]
 
@@ -709,7 +704,7 @@ async def removegroup(ctx, *args):
         return
 
     if(len(args) == 1):
-        roleId = discord.utils.get(ctx.message.guild.roles, name=args[0].lower).id
+        roleId = discord.utils.get(ctx.message.guild.roles, name=args[0]).id
         channelId = ''
         for pair in channelRoles:
             if(pair["pair"][1] == roleId):
