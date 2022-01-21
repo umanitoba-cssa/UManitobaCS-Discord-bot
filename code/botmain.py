@@ -666,7 +666,7 @@ async def on_voice_state_update(member,before,after):
     if(not member.guild.name == "CSSA Game Jam 2022"):
         return
 
-    if(before != None):
+    if(before.channel != None):
         #remove old role
         channelId = before.channel.id
 
@@ -676,7 +676,7 @@ async def on_voice_state_update(member,before,after):
                 await member.remove_roles(role)
                 print("Removed role " + role.name + " from user " + member.name)
 
-        if(after != None):
+        if(after.channel != None):
             channelId = before.channel.id
 
             for pair in channelRoles:
