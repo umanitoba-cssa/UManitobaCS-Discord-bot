@@ -661,15 +661,29 @@ async def on_dropdown(inter):
 @bot.event
 async def on_voice_state_update(member,before,after):
 
+    global channelRoles
+
     if(not member.guild.name == "CSSA Game Jam 2022"):
         return
 
     if(before != None):
         #remove old role
+        channelId = before.channel.id
+
+        for pair in channelRoles:
+            if(pair[0] == channelId):
+                role = discord.utils.get(member.guild.roles, id=pair[1])
+                await member.remove_roles(role)
+                print("Removed role " + role.name + " from user " + member.name)
 
         if(after != None):
-            #add new role
-            pass
+            channelId = before.channel.id
+
+            for pair in channelRoles:
+                if(pair[0] == channelId):
+                    role = discord.utils.get(member.guild.roles, id=pair[1])
+                    await member.add_roles(role)
+                    print("Added role " + role.name + " to user " + member.name)
     
 @bot.command()
 @commands.has_role('CSSA Execs')
@@ -691,7 +705,7 @@ async def creategroup(ctx, *args):
         collection = db["channel_roles"]
         dict = { "pair": (channelId,roleId) }
         collection.insert_one(dict)
-        channelRoles.append(dict)
+        channelRoles.append((channelId,roleId))
 
 @bot.command()
 @commands.has_role('CSSA Execs')
@@ -707,10 +721,10 @@ async def removegroup(ctx, *args):
         roleId = discord.utils.get(ctx.message.guild.roles, name=args[0]).id
         channelId = ''
         for pair in channelRoles:
-            if(pair["pair"][1] == roleId):
-                channelId = pair["pair"][0]
-            channelRoles.remove(pair)
-            break
+            if(pair[1] == roleId):
+                channelId = pair[0]
+                channelRoles.remove((channelId,roleId))
+                break
     
         db = dbClient["game-jam-2022"]
 
