@@ -672,17 +672,17 @@ async def on_voice_state_update(member,before,after):
 
         for pair in channelRoles:
             if(pair[0] == channelId):
-                role = discord.utils.get(member.guild.roles, id=pair[1])
+                role = discord.utils.get(member.guild.roles, id=int(pair[1]))
                 await member.remove_roles(role)
                 print("Removed role " + role.name + " from user " + member.name)
 
     if(after.channel != None):
         #add old role
-        channelId = before.channel.id
+        channelId = after.channel.id
 
         for pair in channelRoles:
             if(pair[0] == channelId):
-                role = discord.utils.get(member.guild.roles, id=pair[1])
+                role = discord.utils.get(member.guild.roles, id=int(pair[1]))
                 await member.add_roles(role)
                 print("Added role " + role.name + " to user " + member.name)
     
