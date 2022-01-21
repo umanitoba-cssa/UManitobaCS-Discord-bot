@@ -666,9 +666,13 @@ async def on_voice_state_update(member,before,after):
     if(not member.guild.name == "CSSA Game Jam 2022"):
         return
 
+    for x in channelRoles:
+        print(x)
+
     if(before.channel != None):
         #remove old role
         channelId = before.channel.id
+        print("looking for ", channelId)
 
         for pair in channelRoles:
             if(pair[0] == channelId):
@@ -679,6 +683,7 @@ async def on_voice_state_update(member,before,after):
     if(after.channel != None):
         #add old role
         channelId = after.channel.id
+        print("looking for ", channelId)
 
         for pair in channelRoles:
             if(pair[0] == channelId):
@@ -706,7 +711,10 @@ async def creategroup(ctx, *args):
         collection = db["channel_roles"]
         dict = { "pair": (channelId,roleId) }
         collection.insert_one(dict)
-        channelRoles.append((channelId,roleId))
+        channelRoles.append([channelId,roleId])
+
+        for x in channelRoles:
+            print(x)
 
 @bot.command()
 @commands.has_role('CSSA Execs')
@@ -724,7 +732,7 @@ async def removegroup(ctx, *args):
         for pair in channelRoles:
             if(pair[1] == roleId):
                 channelId = pair[0]
-                channelRoles.remove((channelId,roleId))
+                channelRoles.remove([channelId,roleId])
                 break
     
         db = dbClient["game-jam-2022"]
