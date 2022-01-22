@@ -1,3 +1,4 @@
+from ast import Subscript
 import os
 import discord
 import pymongo
@@ -42,8 +43,14 @@ global userHistoryList
 userHistoryList = []
 global isEmailEnabled
 isEmailEnabled = False
+
+#channelId, roleId
 global channelRoles
 channelRoles = []
+
+#userId, roleId
+global subscriptions
+subscriptions = []
 
 dbClient = pymongo.MongoClient("mongodb+srv://bot:" + DB_PASS + "@bot-database.p1j75.mongodb.net/bot-database?retryWrites=true&w=majority")
 
@@ -58,6 +65,7 @@ def readInData(serverName):
     elif(serverName == "game-jam"):
         print("\nGame Jam server detected\n")
         db = dbClient["game-jam-2022"]
+
         collection = db["channel_roles"]
         rawValues = collection.find({},{"pair"})
         for x in rawValues:
@@ -65,6 +73,15 @@ def readInData(serverName):
         print("\nChannel roles imported:")
         for x in channelRoles:
             print(x)
+
+        collection = db["subscriptions"]
+        rawValues = collection.find({},{"pair"})
+        for x in rawValues:
+            subscriptions.append(x["pair"])
+        print("\nSubscriptions imported:")
+        for x in subscriptions:
+            print(x)
+
         return
     else:
         server = utils.Server(serverName)
@@ -662,9 +679,15 @@ async def on_dropdown(inter):
 async def on_voice_state_update(member,before,after):
 
     global channelRoles
+    global subscriptions
 
     if(not member.guild.name == "CSSA Game Jam 2022"):
         return
+
+    localSubs = []
+    for pair in subscriptions:
+        if(pair[0] == member.id):
+            localSubs.append(pair[1])
 
     if(before.channel != None):
         #remove old role
@@ -673,8 +696,12 @@ async def on_voice_state_update(member,before,after):
         for pair in channelRoles:
             if(pair[0] == channelId):
                 role = discord.utils.get(member.guild.roles, id=int(pair[1]))
-                await member.remove_roles(role)
-                print("Removed role " + role.name + " from user " + member.name)
+
+                if(not pair[1] in localSubs):
+                    await member.remove_roles(role)
+                    print("Removed role " + role.name + " from user " + member.name)
+                else:
+                    print("Role " + role.name + " not changed for user " + member.name)
 
     if(after.channel != None):
         #add old role
@@ -683,8 +710,12 @@ async def on_voice_state_update(member,before,after):
         for pair in channelRoles:
             if(pair[0] == channelId):
                 role = discord.utils.get(member.guild.roles, id=int(pair[1]))
-                await member.add_roles(role)
-                print("Added role " + role.name + " to user " + member.name)
+
+                if(not pair[1] in localSubs):
+                    await member.add_roles(role)
+                    print("Added role " + role.name + " to user " + member.name)
+                else:
+                    print("Role " + role.name + " not changed for user " + member.name)
     
 @bot.command()
 @commands.has_role('CSSA Execs')
@@ -707,6 +738,7 @@ async def creategroup(ctx, *args):
         dict = { "pair": (channelId,roleId) }
         collection.insert_one(dict)
         channelRoles.append([channelId,roleId])
+        await ctx.send("Group created for " + args[0])
 
 
 @bot.command()
@@ -733,6 +765,77 @@ async def removegroup(ctx, *args):
         collection = db["channel_roles"]
         dict = { "pair": (channelId,roleId) }
         collection.delete_one(dict)
+        await ctx.send("Group deleted for " + args[0])
+
+
+@bot.command()
+async def join(ctx, *args):
+
+    global dbClient
+    global channelRoles
+    global subscriptions
+
+    if(not ctx.message.guild.name == "CSSA Game Jam 2022"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
+    channelId = ctx.message.author.voice.channel.id
+    roleId = -1
+
+    #get role associated with this channel
+    for pair in channelRoles:
+        if(pair[0] == channelId):
+            roleId = pair[1]
+            break
+
+    if(roleId == -1 or channelId == None):
+        await ctx.send("Error: You must be in a groups voice channel.")
+        return
+    
+    role = discord.utils.get(ctx.message.author.guild.roles, id=roleId)
+
+    db = dbClient["game-jam-2022"]
+
+    collection = db["subscriptions"]
+    dict = { "pair": (ctx.message.author.id,roleId) }
+    collection.insert_one(dict)
+    subscriptions.append([ctx.message.author.id,roleId])
+    await ctx.send("User " + ctx.message.author.name + " added to group " + role.name)
+
+
+@bot.command()
+async def leave(ctx, *args):
+
+    global dbClient
+    global channelRoles
+    global subscriptions
+
+    if(not ctx.message.guild.name == "CSSA Game Jam 2022"):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
+    channelId = ctx.message.author.voice.channel.id
+    roleId = -1
+
+    #get role associated with this channel
+    for pair in channelRoles:
+        if(pair[0] == channelId):
+            roleId = pair[1]
+            break
+
+    if(roleId == -1 or channelId == None):
+        await ctx.send("Error: You must be in a groups voice channel.")
+        return
+    
+    role = discord.utils.get(ctx.message.author.guild.roles, id=roleId)
+
+    db = dbClient["game-jam-2022"]
+
+    collection = db["subscriptions"]
+    dict = { "pair": (ctx.message.author.id,roleId) }
+    collection.delete_one(dict)
+    subscriptions.remove([ctx.message.author.id,roleId])
+    await ctx.send("User " + ctx.message.author.name + " removed from group " + role.name)
 
 
 #### Commands ####
