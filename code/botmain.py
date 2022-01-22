@@ -843,7 +843,7 @@ async def leave(ctx, *args):
     dict = { "pair": (ctx.message.author.id,roleId) }
     collection.delete_one(dict)
     subscriptions.remove([ctx.message.author.id,roleId])
-    await ctx.send("You have joined group " + role.name)
+    await ctx.send("You have left group " + role.name)
 
 
 #### Commands ####
