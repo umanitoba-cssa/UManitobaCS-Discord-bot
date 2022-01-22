@@ -804,7 +804,7 @@ async def join(ctx, *args):
     dict = { "pair": (ctx.message.author.id,roleId) }
     collection.insert_one(dict)
     subscriptions.append([ctx.message.author.id,roleId])
-    await ctx.send("User " + ctx.message.author.name + " added to group " + role.name)
+    await ctx.send("You have joined group " + role.name)
 
 
 @bot.command()
@@ -843,7 +843,7 @@ async def leave(ctx, *args):
     dict = { "pair": (ctx.message.author.id,roleId) }
     collection.delete_one(dict)
     subscriptions.remove([ctx.message.author.id,roleId])
-    await ctx.send("User " + ctx.message.author.name + " removed from group " + role.name)
+    await ctx.send("You have joined group " + role.name)
 
 
 #### Commands ####
