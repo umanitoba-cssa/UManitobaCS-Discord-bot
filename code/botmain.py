@@ -779,6 +779,10 @@ async def join(ctx, *args):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
+    if(ctx.message.author.voice == None):
+        await ctx.send("Error: You must be in a groups voice channel.")
+        return
+
     channelId = ctx.message.author.voice.channel.id
     roleId = -1
 
@@ -812,6 +816,10 @@ async def leave(ctx, *args):
 
     if(not ctx.message.guild.name == "CSSA Game Jam 2022"):
         await ctx.send("Error: This command is not enabled on this server.")
+        return
+
+    if(ctx.message.author.voice == None):
+        await ctx.send("Error: You must be in a groups voice channel.")
         return
 
     channelId = ctx.message.author.voice.channel.id
