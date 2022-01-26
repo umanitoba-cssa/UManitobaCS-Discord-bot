@@ -779,14 +779,14 @@ async def join(ctx, *args):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
-    if(ctx.message.author.voice == None):
+    if(ctx.message.author.voice == None and len(args) == 0):
         await ctx.send("Error: You must be in a groups voice channel.")
         return
 
-    channelId = ctx.message.author.voice.channel.id
     roleId = -1
 
     if(len(args) == 0):
+        channelId = ctx.message.author.voice.channel.id
         #get role associated with this channel
         for pair in channelRoles:
             if(pair[0] == channelId):
@@ -832,14 +832,14 @@ async def leave(ctx, *args):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
-    if(ctx.message.author.voice == None):
+    if(ctx.message.author.voice == None and len(args) == 0):
         await ctx.send("Error: You must be in a groups voice channel.")
         return
 
-    channelId = ctx.message.author.voice.channel.id
     roleId = -1
 
     if(len(args) == 0):
+        channelId = ctx.message.author.voice.channel.id
         #get role associated with this channel
         for pair in channelRoles:
             if(pair[0] == channelId):
