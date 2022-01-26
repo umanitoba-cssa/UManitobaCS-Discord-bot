@@ -718,7 +718,7 @@ async def on_voice_state_update(member,before,after):
                     print("Role " + role.name + " not changed for user " + member.name)
     
 @bot.command()
-@commands.has_role('CSSA Execs')
+@commands.has_role('bot-control')
 async def creategroup(ctx, *args):
     global dbClient
     global channelRoles
@@ -742,7 +742,7 @@ async def creategroup(ctx, *args):
 
 
 @bot.command()
-@commands.has_role('CSSA Execs')
+@commands.has_role('bot-control')
 async def removegroup(ctx, *args):
     global dbClient
     global channelRoles
@@ -786,17 +786,31 @@ async def join(ctx, *args):
     channelId = ctx.message.author.voice.channel.id
     roleId = -1
 
-    #get role associated with this channel
-    for pair in channelRoles:
-        if(pair[0] == channelId):
-            roleId = pair[1]
-            break
+    if(len(args) == 0):
+        #get role associated with this channel
+        for pair in channelRoles:
+            if(pair[0] == channelId):
+                roleId = pair[1]
+                break
 
-    if(roleId == -1 or channelId == None):
-        await ctx.send("Error: You must be in a groups voice channel.")
+        if(roleId == -1 or channelId == None):
+            await ctx.send("Error: You must be in a groups voice channel.")
+            return
+        
+        role = discord.utils.get(ctx.message.author.guild.roles, id=roleId)
+
+    elif(len(args) == 1):
+        role = discord.utils.get(ctx.message.author.guild.roles, name=args[0])
+
+        if(role == None):
+            await ctx.send("Error: No role found for `" + args[0] + "`")
+            return
+
+        await ctx.message.author.add_roles(role)
+
+    else:
+        await ctx.send("Error: Please use 0-1 arguments.")
         return
-    
-    role = discord.utils.get(ctx.message.author.guild.roles, id=roleId)
 
     db = dbClient["game-jam-2022"]
 
@@ -825,17 +839,31 @@ async def leave(ctx, *args):
     channelId = ctx.message.author.voice.channel.id
     roleId = -1
 
-    #get role associated with this channel
-    for pair in channelRoles:
-        if(pair[0] == channelId):
-            roleId = pair[1]
-            break
+    if(len(args) == 0):
+        #get role associated with this channel
+        for pair in channelRoles:
+            if(pair[0] == channelId):
+                roleId = pair[1]
+                break
 
-    if(roleId == -1 or channelId == None):
-        await ctx.send("Error: You must be in a groups voice channel.")
+        if(roleId == -1 or channelId == None):
+            await ctx.send("Error: You must be in a groups voice channel.")
+            return
+        
+        role = discord.utils.get(ctx.message.author.guild.roles, id=roleId)
+
+    elif(len(args) == 1):
+        role = discord.utils.get(ctx.message.author.guild.roles, name=args[0])
+
+        if(role == None):
+            await ctx.send("Error: No role found for `" + args[0] + "`")
+            return
+
+        await ctx.message.author.remove_roles(role)
+
+    else:
+        await ctx.send("Error: Please use 0-1 arguments.")
         return
-    
-    role = discord.utils.get(ctx.message.author.guild.roles, id=roleId)
 
     db = dbClient["game-jam-2022"]
 
