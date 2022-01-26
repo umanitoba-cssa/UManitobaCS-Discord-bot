@@ -859,7 +859,8 @@ async def leave(ctx, *args):
             await ctx.send("Error: No role found for `" + args[0] + "`")
             return
 
-        await ctx.message.author.remove_roles(role)
+        if(ctx.message.author.voice == None):
+            await ctx.message.author.remove_roles(role)
 
     else:
         await ctx.send("Error: Please use 0-1 arguments.")
