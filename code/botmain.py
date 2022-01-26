@@ -815,9 +815,9 @@ async def join(ctx, *args):
     db = dbClient["game-jam-2022"]
 
     collection = db["subscriptions"]
-    dict = { "pair": (ctx.message.author.id,roleId) }
+    dict = { "pair": (ctx.message.author.id,role.id) }
     collection.insert_one(dict)
-    subscriptions.append([ctx.message.author.id,roleId])
+    subscriptions.append([ctx.message.author.id,role.id])
     await ctx.send("You have joined group " + role.name)
 
 
@@ -868,9 +868,9 @@ async def leave(ctx, *args):
     db = dbClient["game-jam-2022"]
 
     collection = db["subscriptions"]
-    dict = { "pair": (ctx.message.author.id,roleId) }
+    dict = { "pair": (ctx.message.author.id,role.id) }
     collection.delete_one(dict)
-    subscriptions.remove([ctx.message.author.id,roleId])
+    subscriptions.remove([ctx.message.author.id,role.id])
     await ctx.send("You have left group " + role.name)
 
 
