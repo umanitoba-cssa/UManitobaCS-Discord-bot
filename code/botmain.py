@@ -1,3 +1,9 @@
+# Custom Discord bot for the University of Manitoba Computer Science Discord server
+# Made by Colton Dietterle (2021)
+#
+# If you've been put charge of maintaining this and have any questions, send an email to
+# cdietterle306@gmail.com or reach out to dietterc#8665 on discord.
+#
 from ast import Subscript
 import os
 import discord
