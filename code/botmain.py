@@ -24,6 +24,7 @@ if is_heroku:
     TOKEN = os.environ.get('DISCORD_TOKEN', None)
     DB_PASS = os.environ.get('DB_PASS', None)
     client_secret_txt = os.environ.get('CLIENT_SECRET', None)
+    #later code expects a file
     client_secret = open("client_secret.json","w")
     client_secret.write(client_secret_txt)
     client_secret.close()
@@ -41,14 +42,12 @@ reactionMessages = []
 #Should move into server object at some point
 global userHistoryList
 userHistoryList = []
-global isEmailEnabled
-isEmailEnabled = False
 
 #channelId, roleId
 global channelRoles
 channelRoles = []
 
-#userId, roleId
+#userId, roleId - used for the game jam
 global subscriptions
 subscriptions = []
 
@@ -63,6 +62,9 @@ def readInData(serverName):
     if(serverName == "csDiscord"):
         server = utils.Server("UManitoba Computer Science Lounge")
     elif(serverName == "game-jam"):
+        #left out for now, kept here in case anyone wants to use it again
+        pass
+        '''
         print("\nGame Jam server detected\n")
         db = dbClient["game-jam-2022"]
 
@@ -82,7 +84,9 @@ def readInData(serverName):
         for x in subscriptions:
             print(x)
 
+        #Don't do the rest of this if on the game jam server
         return
+        '''
     else:
         server = utils.Server(serverName)
 
@@ -206,13 +210,13 @@ def readInData(serverName):
 def hasPermission(ctx,level):
     user = ctx.message.author
     server = getServer(ctx)
-    if(level is "admin"):
+    if(level == "admin"):
         for adminRole in server.adminRoles:
             admin = discord.utils.get(ctx.message.guild.roles, name=adminRole)
             if admin in user.roles:
                 return True 
         return False
-    elif(level is "registered"):
+    elif(level == "registered"):
         roles = []
         #add every allowed role to 'roles'
         for role in server.defaultRoles:
@@ -234,7 +238,7 @@ def getServer(ctx):
     else:
         return -1
 
-
+#Originally planned to run this every every day or so, didn't end up using it
 def checkForum(server, forced): 
     if(server.displayName == "UManitoba Computer Science Lounge" or forced):
         if(server.formLastChecked == 0 or time.time() - server.formLastChecked > 43200*2 or forced): 
@@ -295,7 +299,6 @@ async def on_member_join(member):
 
     #db
     db = dbClient["csDiscord"]
-
 
     usedInvite = utils.Invite
     inviteFound = False
@@ -654,6 +657,7 @@ async def on_dropdown(inter):
         roles.append(discord.utils.get(inter.guild.roles, name="gold"))
         roles.append(discord.utils.get(inter.guild.roles, name="black"))
         roles.append(discord.utils.get(inter.guild.roles, name="orange"))
+        roles.append(discord.utils.get(inter.guild.roles, name="dark-blue"))
             
         for i in roles:
             await member.remove_roles(i)
@@ -1285,7 +1289,7 @@ async def help(ctx,*args):
     if(len(args) != 0):
         if(args[0] == "admin"):
             if(hasPermission(ctx, "admin")):
-                await ctx.send("Placeholder for admin help commands")
+                await ctx.send("Placeholder for admin help command")
             else:
                 await ctx.send("Error: You do not have permission to use this command.")
         else:
