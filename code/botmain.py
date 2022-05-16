@@ -6,6 +6,7 @@
 #
 from ast import Subscript
 import os
+from types import NoneType
 import discord
 import pymongo
 import utils
@@ -654,20 +655,15 @@ async def on_dropdown(inter):
         labels = [option.label for option in inter.select_menu.selected_options]
         await inter.reply(f"Setting your colour to: {', '.join(labels)}\n*note: it may take a moment to apply.*", ephemeral=True)
 
+        server = utils.Server
+        for i in connectedServers:
+            if i.id == CS_DISCORD_ID:
+                server  = i
+
         #remove all colours first
         roles = []
-        roles.append(discord.utils.get(inter.guild.roles, name="purple"))
-        roles.append(discord.utils.get(inter.guild.roles, name="red"))
-        roles.append(discord.utils.get(inter.guild.roles, name="yellow"))
-        roles.append(discord.utils.get(inter.guild.roles, name="aqua"))
-        roles.append(discord.utils.get(inter.guild.roles, name="pink"))
-        roles.append(discord.utils.get(inter.guild.roles, name="lime"))
-        roles.append(discord.utils.get(inter.guild.roles, name="green"))
-        roles.append(discord.utils.get(inter.guild.roles, name="blue"))
-        roles.append(discord.utils.get(inter.guild.roles, name="gold"))
-        roles.append(discord.utils.get(inter.guild.roles, name="black"))
-        roles.append(discord.utils.get(inter.guild.roles, name="orange"))
-        roles.append(discord.utils.get(inter.guild.roles, name="dark-blue"))
+        for x in server.colourRoles:
+            roles.append(discord.utils.get(inter.guild.roles, name=x))
             
         for i in roles:
             await member.remove_roles(i)
@@ -684,7 +680,8 @@ async def on_dropdown(inter):
      
         if(not removeAllRoles):
             for role in rolesToAdd:
-                await member.add_roles(role)
+                if role != NoneType:
+                    await member.add_roles(role)
 
 #On every message
 @bot.event
@@ -1147,6 +1144,20 @@ async def colour(ctx, *args):
     else:
         await ctx.send("Error: Correct format is: `" + PREFIX + r"colour add/remove {colour}`.")
     
+@bot.command()
+async def colours(ctx, *args):
+
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
+        await ctx.send("Error: This command is not enabled on this server.")
+        return
+
+    server = getServer(ctx)
+    message = ""
+
+    for x in server.colourRoles:
+        message += x + "\n"
+
+    await ctx.send("Colour roles:```" + message + "```")
 
 @bot.command()
 async def notify(ctx, *args):
