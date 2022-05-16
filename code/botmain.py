@@ -10,6 +10,7 @@ import discord
 import pymongo
 import utils
 import time
+import random
 from discord.ext import commands
 from dotenv import load_dotenv
 from pymongo import message
@@ -42,6 +43,8 @@ else:
 
 PREFIX = '.'
 CS_DISCORD_ID = 724363919035990106
+
+random.seed()
 
 connectedServers = []
 reactionMessages = []
@@ -682,6 +685,27 @@ async def on_dropdown(inter):
         if(not removeAllRoles):
             for role in rolesToAdd:
                 await member.add_roles(role)
+
+#On every message
+@bot.event
+async def on_message(message):
+    john = discord.utils.get(message.guild.emojis, name="cooljohn")
+    kirby = discord.utils.get(message.guild.emojis, name="cursed_kirby")
+
+    words = message.content.split(" ")
+    for w in words:
+        if w.lower() == "processing":
+            if random.randint(0,1) == 0:
+                await message.add_reaction(john)
+                break
+        if w.lower() == "cursed" or w.lower() == "kirby":
+            if random.randint(0,1) == 0:
+                await message.add_reaction(kirby)
+                break
+
+    #THIS MUST BE HERE. If it isn't, commands will not work.
+    await bot.process_commands(message)
+
 
 
 ##------------ GAME JAM UPDATE ------------##
