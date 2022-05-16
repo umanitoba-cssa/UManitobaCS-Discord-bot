@@ -41,6 +41,7 @@ else:
     DB_PASS = os.getenv('DB_PASS')
 
 PREFIX = '.'
+CS_DISCORD_ID = 724363919035990106
 
 connectedServers = []
 reactionMessages = []
@@ -67,9 +68,10 @@ def readInData(serverName):
 
     if(serverName == "csDiscord"):
         server = utils.Server("UManitoba Computer Science Lounge")
+        server.id = CS_DISCORD_ID
     elif(serverName == "game-jam"):
         #left out for now, kept here in case anyone wants to use it again
-        pass
+        return
         '''
         print("\nGame Jam server detected\n")
         db = dbClient["game-jam-2022"]
@@ -246,7 +248,7 @@ def getServer(ctx):
 
 #Originally planned to run this every every day or so, didn't end up using it
 def checkForum(server, forced): 
-    if(server.displayName == "UManitoba Computer Science Lounge" or forced):
+    if(server.id == CS_DISCORD_ID or forced):
         if(server.formLastChecked == 0 or time.time() - server.formLastChecked > 43200*2 or forced): 
             #first check or 12 hours have passed since last check
             server.formLastChecked = time.time()
@@ -278,7 +280,7 @@ async def on_ready():
     #channel = discord.utils.get(guild.channels, name="general")
     
     for guild in bot.guilds:
-        if(guild.name == "UManitoba Computer Science Lounge"):
+        if(guild.id == CS_DISCORD_ID):
             server = readInData("csDiscord")
         if(guild.name == "CSSA Game Jam 2022"):
             readInData("game-jam")
@@ -287,7 +289,7 @@ async def on_ready():
 @bot.event
 async def on_member_join(member):
 
-    if(not member.guild.name == "UManitoba Computer Science Lounge"):
+    if(not member.guild.id == CS_DISCORD_ID):
         return
 
     global dbClient
@@ -362,7 +364,7 @@ async def on_member_join(member):
 
         #remove the old invite from the database/server memory
         
-        if(server.displayName == "UManitoba Computer Science Lounge"):
+        if(server.id == CS_DISCORD_ID):
             db = dbClient["csDiscord"]
         else:
             db = dbClient[server.displayName]
@@ -433,7 +435,7 @@ async def on_member_join(member):
 @bot.event
 async def on_member_update(before, after):
 
-    if(not before.guild.name == "UManitoba Computer Science Lounge"):
+    if(not before.guild.id == CS_DISCORD_ID):
         return
 
     global userHistoryList
@@ -453,7 +455,7 @@ async def on_member_update(before, after):
 
                 #change it in the db
                 global dbClient
-                if(server.displayName == "UManitoba Computer Science Lounge"):
+                if(server.id == CS_DISCORD_ID):
                     db = dbClient["csDiscord"]
                 else:
                     db = dbClient[server.displayName]
@@ -467,11 +469,10 @@ async def on_member_update(before, after):
                 return
 
 
-#contains temp DB fix, do not deploy to other servers with this change
 @bot.event
 async def on_user_update(before, after):
 
-    #if(not before.guild.name == "UManitoba Computer Science Lounge"):
+    #if(not before.guild.id == CS_DISCORD_ID):
         #return
 
     global userHistoryList
@@ -501,7 +502,7 @@ async def on_user_update(before, after):
 @bot.event
 async def on_reaction_add(reaction, user):
 
-    if(not reaction.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not reaction.message.guild.id == CS_DISCORD_ID):
         return
 
     #print(user.display_name + " sent a reaction")
@@ -518,7 +519,7 @@ async def on_reaction_add(reaction, user):
 @bot.event
 async def on_reaction_remove(reaction, user):
 
-    if(not reaction.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not reaction.message.guild.id == CS_DISCORD_ID):
         return
 
     #print(user.display_name + " sent a reaction")
@@ -535,7 +536,7 @@ async def on_reaction_remove(reaction, user):
 @bot.event
 async def on_message_delete(message):
 
-    if(not message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not message.guild.id == CS_DISCORD_ID):
         return
 
     global reactionMessages
@@ -556,7 +557,7 @@ async def on_message_delete(message):
 @bot.event
 async def on_dropdown(inter):
 
-    if(not inter.guild.name == "UManitoba Computer Science Lounge"):
+    if(not inter.guild.id == CS_DISCORD_ID):
         return
 
     member = discord.utils.get(inter.guild.members, id=inter.author.id)
@@ -888,18 +889,25 @@ async def leave(ctx, *args):
 #### Commands ####
 
 #default format for commands, where the function name is the command to type
+#the has_role part here is the 'easy' way to lock out commands, I like to do it the manual way (checking myself)
 @bot.command()
 @commands.has_role('admin')
 async def test(ctx, *, args=None):
     #send the arguments of the command back to the user
     await ctx.send(''.join(args))
 
+#get this servers ID
+@bot.command()
+@commands.has_role('admin')
+async def id(ctx, *, args=None):
+    await ctx.send(ctx.message.guild.id)
+
 
 #forcibly check for forum responses
 @bot.command()
 async def forcecheck(ctx, *args):
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -918,7 +926,7 @@ async def forcecheck(ctx, *args):
 @bot.command()
 async def iam(ctx, *args):
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -983,7 +991,7 @@ async def iamnot(ctx, *args):
 @bot.command()
 async def iamn(ctx, *args):
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -1042,13 +1050,13 @@ async def iamn(ctx, *args):
 @bot.command()
 async def colour(ctx, *args):
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
     server = getServer(ctx)
     global dbClient
-    if(server.displayName == "UManitoba Computer Science Lounge"):
+    if(server.id == CS_DISCORD_ID):
         db = dbClient["csDiscord"]
     else:
         db = dbClient[server.displayName]
@@ -1119,7 +1127,7 @@ async def colour(ctx, *args):
 @bot.command()
 async def notify(ctx, *args):
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -1167,7 +1175,7 @@ async def notify(ctx, *args):
 @bot.command()
 async def unnotify(ctx, *args):
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -1215,7 +1223,7 @@ async def unnotify(ctx, *args):
 @bot.command()
 async def setgreetmessage(ctx, *, arg): 
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -1239,7 +1247,7 @@ async def setgreetmessage(ctx, *, arg):
 @setgreetmessage.error
 async def setgreetmessage_error(ctx, error):
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -1262,7 +1270,7 @@ async def setgreetmessage_error(ctx, error):
 @bot.command()
 async def autoassignrole(ctx,*args):
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -1288,7 +1296,7 @@ bot.remove_command("help")
 @bot.command()
 async def help(ctx,*args):
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -1313,7 +1321,7 @@ async def help(ctx,*args):
 @bot.command()
 async def form(ctx,*args):
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -1323,7 +1331,7 @@ async def form(ctx,*args):
 @bot.command()
 async def history(ctx, *, args=None):
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -1388,7 +1396,7 @@ async def history(ctx, *, args=None):
 @bot.command()
 async def reactionRole(ctx, *, args=None): 
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -1424,7 +1432,7 @@ async def reactionRole(ctx, *, args=None):
 @bot.command()
 async def setupRolesChannel(ctx, *, args=None): 
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -1522,7 +1530,7 @@ async def setupRolesChannel(ctx, *, args=None):
 @bot.command()
 async def genFormInvites(ctx, *, args=None):
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
@@ -1606,7 +1614,7 @@ async def genFormInvites(ctx, *, args=None):
 @bot.command()
 async def sendmessage(ctx, *, arg): 
 
-    if(not ctx.message.guild.name == "UManitoba Computer Science Lounge"):
+    if(not ctx.message.guild.id == CS_DISCORD_ID):
         await ctx.send("Error: This command is not enabled on this server.")
         return
 
