@@ -10,6 +10,8 @@
 `.unnotify {category}`
     - Removes an announcement role
     - Can use `all` in place of a category to be removed from all notification roles
+`.colours`
+    - List all available name colours
 `.form`
     - Link to the sign-up form
 `.wics`

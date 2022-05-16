@@ -986,7 +986,12 @@ async def iam(ctx, *args):
                         await ctx.send("Error: You already have the `" + year + "` role.")
                     else:
                         await user.add_roles(discord.utils.get(ctx.message.guild.roles, name=year))
-                        await ctx.send("`" + year + "` role added.")
+                        sentmsg = await ctx.send("`" + year + "` role added.")
+                        
+                        if year.lower() == "tenth year":
+                            sentmsg.delete(delay=3)
+                            ctx.message.delete(delay=3)
+
                 else:
                     await ctx.send("Error: Correct format is `" + PREFIX + "iam " + args[0] + " year`.")
 
@@ -1047,7 +1052,12 @@ async def iamn(ctx, *args):
                     role = discord.utils.get(ctx.message.guild.roles, name=year)
                     if role in user.roles:
                         await user.remove_roles(role)
-                        await ctx.send("Year role `" + role.name + "` removed.")
+                        sentmsg = await ctx.send("Year role `" + role.name + "` removed.")
+                        
+                        if year.lower() == "tenth year":
+                            sentmsg.delete(delay=3)
+                            ctx.message.delete(delay=3)
+
                     else:
                         await ctx.send("Error: You do not have the role `" + role.name + "`.")
                 else:
@@ -1156,7 +1166,7 @@ async def colours(ctx, *args):
     for x in server.colourRoles:
         message += x + "\n"
 
-    await ctx.send("Colour roles:```" + message + "```")
+    await ctx.send("Colour roles:```" + message + "\nUsage: .iam <colour>```")
 
 @bot.command()
 async def notify(ctx, *args):
