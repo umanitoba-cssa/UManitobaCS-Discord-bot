@@ -6,7 +6,6 @@
 #
 from ast import Subscript
 import os
-from types import NoneType
 import discord
 import pymongo
 import utils
@@ -680,7 +679,7 @@ async def on_dropdown(inter):
      
         if(not removeAllRoles):
             for role in rolesToAdd:
-                if role != NoneType:
+                if role != None:
                     await member.add_roles(role)
 
 #On every message
