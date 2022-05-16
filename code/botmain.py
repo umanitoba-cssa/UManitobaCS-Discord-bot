@@ -1316,7 +1316,7 @@ async def autoassignrole(ctx,*args):
         await ctx.send("Auto assignment of roles disabled.")
 
 
-bot.remove_command("help")
+bot.remove_command("help") 
 @bot.command()
 async def help(ctx,*args):
 
