@@ -682,6 +682,27 @@ async def on_dropdown(inter):
                 if role != None:
                     await member.add_roles(role)
 
+    elif(inter.select_menu.custom_id == "status"):
+
+        labels = [option.label for option in inter.select_menu.selected_options]
+        await inter.reply(f"Setting your status to: {''.join(labels)}", ephemeral=True)
+
+        server = utils.Server
+        for i in connectedServers:
+            if i.id == CS_DISCORD_ID:
+                server  = i
+
+        #remove old role
+        await member.remove_roles(discord.utils.get(inter.guild.roles, name="Student"))
+        await member.remove_roles(discord.utils.get(inter.guild.roles, name="Alumni"))
+
+        for option in inter.select_menu.options:
+            role = discord.utils.get(inter.guild.roles, name=option.value)
+            
+            if(option in inter.select_menu.selected_options):
+                await member.add_roles(role)
+     
+
 #On every message
 @bot.event
 async def on_message(message):
@@ -1347,7 +1368,16 @@ async def help(ctx,*args):
     if(len(args) != 0):
         if(args[0] == "admin"):
             if(hasPermission(ctx, "admin")):
-                await ctx.send("Placeholder for admin help command")
+                file = open("templates/admin_help_command.txt","r")
+                content = file.read()
+                file.close()
+
+                embed = discord.Embed(color=0x8e1600)
+                embed.add_field(name="Admin commands", value=content, inline=False)
+
+                channel = discord.utils.get(ctx.guild.channels, name="admin-bot-commands")
+                await channel.send(embed=embed)
+                await ctx.send("Output sent to *[REDACTED]*")
             else:
                 await ctx.send("Error: You do not have permission to use this command.")
         else:
@@ -1486,7 +1516,7 @@ async def setupRolesChannel(ctx, *, args=None):
     global dbClient
     db = dbClient["csDiscord"]
 
-    #only Colton 
+    #only Colton for now - ADD YOUR ID HERE
     if(not user.id == 168594133781446656):
         await ctx.send("Error: You do not have permission to use this command.")
         return
@@ -1566,7 +1596,23 @@ async def setupRolesChannel(ctx, *, args=None):
             )
         ]
     )
-    colourMsg2 = await text_channel.send("You can also use the command `.iam <colour>` to set your colour.\nUse `.iamnot <colour>`, `.iamn <colour>` or select the \"No colour\" option in the menu above to remove your colour. If you want to suggest a colour, share it in #suggestions-and-feedback!")
+    colourMsg2 = await text_channel.send("You can also use the command `.iam <colour>` to set your colour.\nUse `.iamnot <colour>`, `.iamn <colour>` or select the \"No colour\" option in the menu above to remove your colour. If you want to suggest a colour, share it in #suggestions-and-feedback!\nTo see the full list of colours, use the command `.colours`")
+
+    #Colour role
+    statusMsg = await text_channel.send(
+        "**~**\n\n__**Student status:**__ \nAre you a student or alumni? Select one of the following:",
+        components=[
+            SelectMenu(
+                custom_id="status",
+                placeholder="Choose 1 option",
+                max_values=1,
+                options=[
+                    SelectOption("Student", "Student", "Set your status to Student", "📖"),
+                    SelectOption("Alumni", "Alumni", "Set your status to Alumni","🎓"),
+                ]
+            )
+        ]
+    )
 
     await text_channel.send("**~**\n\nTo receive any of the above roles, you must have the either the student or alumni role. Unless you joined through an event invite, it should be given to you shortly after you join. Let us know if you should have it but don't!")
 
@@ -1610,11 +1656,12 @@ async def genFormInvites(ctx, *, args=None):
     index = len(responsesSheet.col_values(8)) + 1 #the index of the first new response
 
     def checkEmail(email, currentIndex):
-        
+        email = email.replace(" ","").lower()
+
         if(not email.endswith("@myumanitoba.ca" or email.endswith("@learning.icmanitoba.ca"))):
             return False
         for i in range(currentIndex - 1):
-            if(email == emails[i]):
+            if(email == emails[i].replace(" ","").lower()):
                 return False
         return True
 
@@ -1622,8 +1669,15 @@ async def genFormInvites(ctx, *, args=None):
 
         if(checkEmail(emails[i-1],i)):
 
-            channelRoles = rawChannelRoles[i-1].split(", ")
-            notificationRoles = rawNotificationRoles[i-1].split(", ")
+            try:
+                channelRoles = rawChannelRoles[i-1].split(", ")
+            except:
+                channelRoles = []
+            
+            try:
+                notificationRoles = rawNotificationRoles[i-1].split(", ")
+            except:
+                notificationRoles = []
 
             roles = []
             for j in channelRoles:
