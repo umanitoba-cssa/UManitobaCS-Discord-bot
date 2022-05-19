@@ -1,0 +1,14 @@
+`.reactionRole {content}`
+    - content must be in this format: CHANNEL,EMOJI,ROLE##MESSAGE
+`.setupRolesChannel {channel}`
+    - send the messages seen in #roles-and-channels
+    - you will have to delete the old messages yourself first, and manually add your discord ID in the code.
+`.genFormInvites`
+    - search the form for new responses and generate the invite codes to send out.
+    - case sensitive, **Only do this command in the admin channel**
+`.sendmessage {CHANNEL##MESSAGE}`
+    - send the given message to the given channel 
+    - emojis and gifs sometimes work
+`.generateInvites {n}`
+    - generate n regular invites 
+    - this can be used on any server the bot is in. 

@@ -1331,7 +1331,7 @@ async def setgreetmessage_error(ctx, error):
         collection.update_one(dict, new_dict)
         server.greetMessage = ""
        
-
+#not sure if this is still used tbh
 @bot.command()
 async def autoassignrole(ctx,*args):
 
@@ -1368,15 +1368,22 @@ async def help(ctx,*args):
     if(len(args) != 0):
         if(args[0] == "admin"):
             if(hasPermission(ctx, "admin")):
-                file = open("templates/admin_help_command.txt","r")
-                content = file.read()
+                file = open("templates/admin_help_command1.txt","r")
+                content1 = file.read()
+                file.close()
+
+                file = open("templates/admin_help_command2.txt","r")
+                content2 = file.read()
                 file.close()
 
                 embed = discord.Embed(color=0x8e1600)
-                embed.add_field(name="Admin commands", value=content, inline=False)
+                embed.add_field(name="Admin commands:", value=content1, inline=False)
+                embed.add_field(name="Part 2:", value=content2, inline=False)
 
                 channel = discord.utils.get(ctx.guild.channels, name="admin-bot-commands")
                 await channel.send(embed=embed)
+                
+
                 await ctx.send("Output sent to *[REDACTED]*")
             else:
                 await ctx.send("Error: You do not have permission to use this command.")
@@ -1516,8 +1523,8 @@ async def setupRolesChannel(ctx, *, args=None):
     global dbClient
     db = dbClient["csDiscord"]
 
-    #only Colton for now - ADD YOUR ID HERE
-    if(not user.id == 168594133781446656):
+    #only _ for now - ADD YOUR ID HERE
+    if(not user.id == 0):
         await ctx.send("Error: You do not have permission to use this command.")
         return
 

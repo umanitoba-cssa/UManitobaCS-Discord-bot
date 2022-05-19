@@ -1,0 +1,13 @@
+`.test` 
+    - echos what you send 
+`.id` 
+    - display server id  
+`.forcecheck` 
+    - check the form for responses  
+`.colour add/remove` 
+    - colour add #{hexColour} {label} 
+    - colour remove {label}
+`.setgreetmessage`
+    - set the message that displays after a user joins, use <nl> for a new line
+`.history {user}`
+    - find username/nickname history for given user
