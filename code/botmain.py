@@ -417,9 +417,9 @@ async def on_member_join(member):
 
     else:
         print("Invalid invite used for user" + member.mention + " adding unregistered role.")
-        unRegistered = discord.utils.get(guild.roles, name="unregistered")
-        print(unRegistered.name + " assigned to " + member.mention)
-        await member.add_roles(unRegistered)
+        #unRegistered = discord.utils.get(guild.roles, name="unregistered")
+        #print(unRegistered.name + " assigned to " + member.mention)
+        #await member.add_roles(unRegistered)
 
 
     global userHistoryList
